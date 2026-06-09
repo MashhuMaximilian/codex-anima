@@ -115,3 +115,45 @@ export const SOURCE_NAMES: Record<string, string> = {
 };
 
 export const PREF_SOURCES = ["XPHB", "PHB", "TCE", "MPMM", "VGM"];
+
+export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+export type AbilityKey = typeof ABILITIES[number];
+
+export interface Skill {
+  name: string;
+  ability: AbilityKey;
+}
+
+export const SKILLS: Skill[] = [
+  { name: 'Acrobatics', ability: 'dex' },
+  { name: 'Animal Handling', ability: 'wis' },
+  { name: 'Arcana', ability: 'int' },
+  { name: 'Athletics', ability: 'str' },
+  { name: 'Deception', ability: 'cha' },
+  { name: 'History', ability: 'int' },
+  { name: 'Insight', ability: 'wis' },
+  { name: 'Intimidation', ability: 'cha' },
+  { name: 'Investigation', ability: 'int' },
+  { name: 'Medicine', ability: 'wis' },
+  { name: 'Nature', ability: 'int' },
+  { name: 'Perception', ability: 'wis' },
+  { name: 'Performance', ability: 'cha' },
+  { name: 'Persuasion', ability: 'cha' },
+  { name: 'Religion', ability: 'int' },
+  { name: 'Sleight of Hand', ability: 'dex' },
+  { name: 'Stealth', ability: 'dex' },
+  { name: 'Survival', ability: 'wis' },
+];
+export type SkillName = typeof SKILLS[number]['name'];
+
+export function abilityMod(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+export function formatMod(mod: number): string {
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+}
+
+export function proficiencyByLevel(level: number): number {
+  return Math.ceil(1 + level / 4);
+}
