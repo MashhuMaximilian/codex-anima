@@ -24,6 +24,84 @@ type AbilityKey = typeof ABILITIES[number];
 
 const STEP_LABELS = ['Settings', 'Identity', 'Heritage', 'Calling', 'Capabilities', 'Spells & Gear'];
 
+/**
+ * NumberStatInput — a number input that lets the user CLEAR the field
+ * (and type a new value) without the controlled state slamming it back.
+ *
+ * The bug it fixes: setting `value={8}` while the user is editing means
+ * every `setState(0)` forces the input back to a clamped int. So if the
+ * user wants to change `15` to `9`, they have to backspace past the
+ * `1` (which the handler then reads as `''` and clamps to 8) — making
+ * it impossible to type a smaller value.
+ *
+ * The fix: keep a local string state while the input has focus. On
+ * `change`, update the local string. On `blur`, parse + clamp + commit
+ * to the parent's numeric state.
+ */
+function NumberStatInput({
+  ability,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  ability: AbilityKey;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+}) {
+  const [local, setLocal] = useState<string>(String(value));
+  const [focused, setFocused] = useState(false);
+
+  // Keep local string in sync when the parent value changes from elsewhere
+  // (e.g. Tasha's Custom Origin floated ASI) — but only when we're not
+  // actively editing, otherwise the user's typing would be clobbered.
+  useEffect(() => {
+    if (!focused) setLocal(String(value));
+  }, [value, focused]);
+
+  const commit = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    if (Number.isNaN(parsed)) {
+      // Empty or junk — revert to last good value
+      setLocal(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, parsed));
+    setLocal(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
+  return (
+    <div className="form-group" style={{ marginBottom: 0 }}>
+      <label htmlFor={`stat-${ability}`}>{ability.toUpperCase()}</label>
+      <input
+        id={`stat-${ability}`}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={local}
+        onFocus={() => setFocused(true)}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => {
+          setFocused(false);
+          commit(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            (e.target as HTMLInputElement).blur();
+          } else if (e.key === 'Escape') {
+            setLocal(String(value));
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+    </div>
+  );
+}
+
 interface RawSubrace {
   name: string;
   raceName?: string;
@@ -313,7 +391,7 @@ export default function BuilderPage() {
       <div>
         <div className="topbar">
           <Link href="/" className="title">Codex Anima<small>D&amp;D 5e</small></Link>
-          <div className="flex gap-2 items-center">
+          <div className="topbar-actions">
             <ThemeToggle />
           </div>
         </div>
@@ -328,7 +406,7 @@ export default function BuilderPage() {
     <div>
       <div className="topbar">
         <Link href="/" className="title">Codex Anima<small>Builder</small></Link>
-        <div className="flex gap-2 items-center">
+        <div className="topbar-actions">
           <Link href="/" className="tbtn">Home</Link>
           <button className="tbtn" onClick={handleImport}>Import</button>
           <ThemeToggle />
@@ -451,10 +529,21 @@ export default function BuilderPage() {
                 <input
                   id="level"
                   type="number"
-                  value={char.level}
+                  inputMode="numeric"
                   min={1}
                   max={20}
-                  onChange={(e) => setChar({ ...char, level: Math.max(1, Math.min(20, parseInt(e.target.value) || 1)) })}
+                  value={char.level}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    // Allow empty / partial input while typing
+                    if (raw === '') return;
+                    const parsed = parseInt(raw, 10);
+                    if (Number.isNaN(parsed)) return;
+                    setChar({ ...char, level: Math.max(1, Math.min(20, parsed)) });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') setChar({ ...char, level: 1 });
+                  }}
                 />
               </div>
             </div>
@@ -604,25 +693,16 @@ export default function BuilderPage() {
             )}
             <div className="stat-row-grid">
               {ABILITIES.map((a) => (
-                <div key={a} className="form-group">
-                  <label htmlFor={`stat-${a}`}>{a.toUpperCase()}</label>
-                  <input
-                    id={`stat-${a}`}
-                    type="number"
-                    min={8}
-                    max={15}
-                    value={char.abilities[a]}
-                    onChange={(e) =>
-                      setChar({
-                        ...char,
-                        abilities: {
-                          ...char.abilities,
-                          [a]: Math.max(8, Math.min(15, parseInt(e.target.value) || 8)),
-                        },
-                      })
-                    }
-                  />
-                </div>
+                <NumberStatInput
+                  key={a}
+                  ability={a}
+                  value={char.abilities[a] || 8}
+                  min={8}
+                  max={15}
+                  onChange={(v) =>
+                    setChar({ ...char, abilities: { ...char.abilities, [a]: v } })
+                  }
+                />
               ))}
             </div>
             <p className={`mt-4 ${ptUsed > 27 ? 'accent' : 'muted'}`}>
@@ -630,8 +710,10 @@ export default function BuilderPage() {
             </p>
 
             {selectedClass && selectedClass.feats.length > 0 && (
-              <details className="mt-4">
-                <summary className="muted cursor-pointer py-2">Class features preview ({selectedClass.feats.length})</summary>
+              <details className="disclosure">
+                <summary>
+                  <span>Class features preview ({selectedClass.feats.length})</span>
+                </summary>
                 <div className="mt-2">
                   {selectedClass.feats.slice(0, 5).map((f, i) => (
                     <div key={i} className="feature-item">
@@ -639,6 +721,9 @@ export default function BuilderPage() {
                       <p>{f.text}</p>
                     </div>
                   ))}
+                  {selectedClass.feats.length > 5 && (
+                    <p className="muted text-center mt-2">+ {selectedClass.feats.length - 5} more features</p>
+                  )}
                 </div>
               </details>
             )}

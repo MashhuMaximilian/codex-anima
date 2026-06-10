@@ -44,13 +44,17 @@
     repeating-linear-gradient(0deg, rgba(122, 32, 13, 0.015) 0, rgba(122, 32, 13, 0.015) 1px, transparent 0, transparent 6px),
     linear-gradient(180deg, #fff8ec 0%, #fdf3e2 55%, #f1dfc7 100%);
 
-  /* Component-level mappings to the existing class system */
+  /* Component-level mappings to the existing class system.
+     Light mode cards are MORE WHITE than the parchment background —
+     so they read as elevated paper, not "card on card on card".
+     Borders use a faint oxblood + gold mix to feel like a manuscript edge. */
   --bg-page: var(--bg);
-  --bg-card: #fbf2e0;            /* slightly lighter than --bg for cards */
-  --bg-soft: var(--surface);
-  --bg-input: rgba(255, 251, 245, 0.92);
-  --line: rgba(146, 38, 16, 0.20);
-  --line-soft: rgba(146, 38, 16, 0.12);
+  --bg-card: #fdf6e7;            /* lifted parchment — lighter than page */
+  --bg-soft: #f5e9d2;            /* sunken / hairline containers */
+  --bg-input: #ffffff;           /* crisp white input fill */
+  --line: rgba(146, 38, 16, 0.22);
+  --line-soft: rgba(146, 38, 16, 0.10);
+  --line-gold: rgba(230, 154, 40, 0.30);
   --text: var(--foreground);
   --text-dim: var(--muted);
   --text-faint: #8c7765;
@@ -59,10 +63,21 @@
   --gold-soft: var(--accent-soft);
   --good: var(--success);
   --bad: #a23a2a;
-  --shadow-card: 0 1px 2px rgba(60, 30, 10, 0.08), 0 4px 12px rgba(60, 30, 10, 0.06);
-  --shadow-lg-card: 0 8px 32px rgba(60, 30, 10, 0.14);
-  --hero-radius: 24px;
+  --shadow-card: 0 1px 0 rgba(255, 252, 240, 0.6) inset, 0 1px 2px rgba(60, 30, 10, 0.10), 0 4px 14px rgba(60, 30, 10, 0.08);
+  --shadow-lg-card: 0 1px 0 rgba(255, 252, 240, 0.6) inset, 0 8px 28px rgba(60, 30, 10, 0.14);
+  --hero-radius: 20px;
   --card-radius: 14px;
+
+  /* Spacing scale — used everywhere for vertical rhythm. 4px base. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 56px;
 
   color-scheme: light;
 }
@@ -94,11 +109,12 @@
     linear-gradient(180deg, #0a0810 0%, #0e0c14 50%, #14111c 100%);
 
   --bg-page: var(--bg);
-  --bg-card: #1a1722;
-  --bg-soft: #1f1c2a;
+  --bg-card: #1a1722;            /* lifted above page so cards still read */
+  --bg-soft: #14111c;            /* sunken / hairline containers */
   --bg-input: rgba(10, 8, 16, 0.6);
   --line: rgba(230, 186, 90, 0.18);
   --line-soft: rgba(230, 186, 90, 0.10);
+  --line-gold: rgba(230, 186, 90, 0.32);
   --text: var(--foreground);
   --text-dim: var(--muted);
   --text-faint: #5a544a;
@@ -107,8 +123,19 @@
   --gold-soft: rgba(230, 186, 90, 0.16);
   --good: var(--success);
   --bad: #d96a55;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg-card: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --shadow-card: inset 0 1px 0 rgba(230, 186, 90, 0.05), 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg-card: inset 0 1px 0 rgba(230, 186, 90, 0.06), 0 8px 28px rgba(0, 0, 0, 0.55);
+
+  /* Spacing scale — same on both modes for rhythm consistency */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 56px;
 
   color-scheme: dark;
 }
@@ -154,87 +181,105 @@ input, button, select, textarea, .ui {
 .accent { color: var(--accent); }
 
 /* ============================================
-   TOPBAR
+   TOPBAR — sticky transparent bar with hairline gold underline.
+   No visible card boundary — just a faint gold rule below.
    ============================================ */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--line);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-bottom: 1px solid var(--line-gold);
   position: sticky;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
 }
 .topbar .title {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--accent);
   text-decoration: none;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--space-2);
+  letter-spacing: -0.01em;
 }
 .topbar .title small {
-  font-family: var(--font-serif);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .topbar a { color: var(--accent); text-decoration: none; }
 .topbar a:hover { text-decoration: underline; }
 
+.topbar-actions { display: flex; gap: var(--space-2); align-items: center; }
+
 .tbtn {
   background: transparent;
   border: 1px solid var(--line);
   color: var(--text);
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   font-family: inherit;
   transition: all 0.15s;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .tbtn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.tbtn.primary { background: var(--accent); color: var(--bg-card); border-color: var(--accent); }
-.tbtn.primary:hover { background: var(--accent-hover); color: var(--bg-card); }
+.tbtn.primary { background: var(--accent); color: #fdf6e7; border-color: var(--accent); }
+.tbtn.primary:hover { background: var(--accent-hover); color: #fdf6e7; border-color: var(--accent-hover); }
+[data-theme="dark"] .tbtn.primary { color: #14111c; }
 
 /* ============================================
-   CARDS
+   CARDS — token-driven, lifted from page
    ============================================ */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow);
+  border-radius: var(--card-radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-card);
 }
 .card h2 {
   font-family: var(--font-serif);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-3);
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 .card h3 {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
   color: var(--text);
+  letter-spacing: 0.02em;
 }
+.card h3:first-child { margin-top: 0; }
+.card p { margin: 0 0 var(--space-3); line-height: 1.55; }
+.card p:last-child { margin-bottom: 0; }
+.card .muted { margin-bottom: var(--space-3); }
+.card .muted:last-child { margin-bottom: 0; }
 
 .wrap {
   max-width: 720px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--space-5) var(--space-4) var(--space-7);
 }
 
 /* ============================================
@@ -242,15 +287,15 @@ input, button, select, textarea, .ui {
    ============================================ */
 .stepper {
   display: flex;
-  gap: 6px;
-  padding: 16px 24px 8px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-2);
   max-width: 720px;
   margin: 0 auto;
   align-items: center;
 }
 .step-pill {
   flex: 1;
-  height: 4px;
+  height: 3px;
   background: var(--line);
   border-radius: 999px;
   transition: background 0.25s ease, opacity 0.25s ease;
@@ -272,18 +317,18 @@ input, button, select, textarea, .ui {
   display: flex;
   max-width: 720px;
   margin: 0 auto;
-  padding: 4px 24px 0;
-  gap: 6px;
+  padding: 0 var(--space-4);
+  gap: var(--space-2);
 }
 .step-label-pill {
   flex: 1;
   text-align: center;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-faint);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
-  padding: 2px 0;
+  padding: var(--space-1) 0;
   transition: color 0.2s;
   white-space: nowrap;
   overflow: hidden;
@@ -298,7 +343,7 @@ input, button, select, textarea, .ui {
   color: var(--text-dim);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 8px 24px 0;
+  padding: var(--space-2) var(--space-4) 0;
   font-weight: 500;
   max-width: 720px;
   margin: 0 auto;
@@ -306,37 +351,40 @@ input, button, select, textarea, .ui {
 .step-label strong { color: var(--accent); font-weight: 600; }
 
 /* ============================================
-   FORMS
+   FORMS — compact, uniform spacing
    ============================================ */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--space-3);
 }
 @media (max-width: 600px) {
   .form-grid { grid-template-columns: 1fr; }
 }
+.form-group { margin-bottom: var(--space-3); }
+.form-group:last-child { margin-bottom: 0; }
 .form-group label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-1);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 600;
 }
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 11px 14px;
+  padding: 9px 12px;
   background: var(--bg-input);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
   font-family: inherit;
   transition: all 0.15s;
+  line-height: 1.4;
 }
 .form-group input:focus,
 .form-group select:focus,
@@ -396,12 +444,12 @@ input, button, select, textarea, .ui {
 }
 
 /* ============================================
-   BUTTONS
+   BUTTONS — compact, uniform
    ============================================ */
 .btn {
-  padding: 11px 20px;
+  padding: 9px 16px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
@@ -411,37 +459,41 @@ input, button, select, textarea, .ui {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  line-height: 1.3;
+  white-space: nowrap;
 }
-.btn.primary { background: var(--accent); color: var(--bg-card); border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fdf6e7; border-color: var(--accent); }
+[data-theme="dark"] .btn.primary { color: #14111c; }
 .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .btn.secondary { background: transparent; color: var(--text); border-color: var(--line); }
-.btn.secondary:hover { background: var(--bg-soft); border-color: var(--line-soft); }
+.btn.secondary:hover { background: var(--bg-soft); border-color: var(--accent); }
 .btn.accent { background: transparent; color: var(--accent); border-color: var(--accent); }
 .btn.accent:hover { background: var(--accent-soft); }
 .btn.full { width: 100%; }
-.btn.lg { padding: 14px 28px; font-size: 15px; }
+.btn.lg { padding: 12px 22px; font-size: 14px; }
 
 .btn-row {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
   flex-wrap: wrap;
 }
 .btn-row .btn { flex: 1; min-width: 100px; }
 
 /* ============================================
-   PICK GRID
+   PICK GRID — race/class cards inside accordions
    ============================================ */
 .pick-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 .pick-card {
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: var(--space-2) var(--space-3);
   cursor: pointer;
   transition: all 0.15s;
   text-align: left;
@@ -451,7 +503,6 @@ input, button, select, textarea, .ui {
 .pick-card:hover {
   background: var(--bg-card);
   border-color: var(--accent);
-  transform: translateY(-1px);
 }
 .pick-card.selected {
   background: var(--accent-soft);
@@ -459,40 +510,41 @@ input, button, select, textarea, .ui {
   color: var(--accent);
 }
 .pick-card.selected strong { color: var(--accent); }
-.pick-card strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.pick-card .source-tag { display: inline-block; font-size: 10px; opacity: 0.65; letter-spacing: 0.05em; }
-.pick-card .desc { font-size: 11px; opacity: 0.7; margin-top: 4px; line-height: 1.4; }
+.pick-card strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 1px; }
+.pick-card .source-tag { display: inline-block; font-size: 9px; opacity: 0.7; letter-spacing: 0.05em; margin-top: 2px; }
+.pick-card .desc { font-size: 10px; opacity: 0.75; margin-top: 2px; line-height: 1.4; }
 
 /* ============================================
    SOURCE TAGS / CHIPS
    ============================================ */
 .source-tag {
   display: inline-block;
-  font-size: 10px;
-  padding: 2px 7px;
+  font-size: 9px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: var(--bg-soft);
   color: var(--text-dim);
   border: 1px solid var(--line);
   font-weight: 500;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .source-tag.active {
   background: var(--accent);
-  color: var(--bg-card);
+  color: #fdf6e7;
   border-color: var(--accent);
 }
+[data-theme="dark"] .source-tag.active { color: #14111c; }
 
 .source-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 12px 0;
-  margin-bottom: 12px;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 var(--space-3);
 }
 .source-chip {
-  font-size: 11px;
-  padding: 5px 10px;
+  font-size: 10px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: var(--bg-soft);
   color: var(--text-dim);
@@ -500,43 +552,46 @@ input, button, select, textarea, .ui {
   cursor: pointer;
   font-family: inherit;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   transition: all 0.15s;
 }
-.source-chip:hover { border-color: var(--accent); }
+.source-chip:hover { border-color: var(--accent); color: var(--accent); }
 .source-chip.active {
   background: var(--accent);
-  color: var(--bg-card);
+  color: #fdf6e7;
   border-color: var(--accent);
 }
+[data-theme="dark"] .source-chip.active { color: #14111c; }
 
 /* ============================================
    TOGGLE / RADIO GROUPS
    ============================================ */
 .toggle-group {
-  display: flex;
+  display: inline-flex;
   background: var(--bg-soft);
   border-radius: 999px;
   padding: 3px;
   border: 1px solid var(--line);
+  margin-bottom: var(--space-3);
 }
 .toggle-group button {
-  flex: 1;
   background: transparent;
   border: none;
-  padding: 8px 14px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-dim);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .toggle-group button.active {
   background: var(--bg-card);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  color: var(--accent);
+  box-shadow: var(--shadow-card);
   font-weight: 600;
 }
 
@@ -544,18 +599,19 @@ input, button, select, textarea, .ui {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--line-soft);
+  gap: var(--space-3);
 }
 .toggle-row:last-child { border-bottom: none; }
-.toggle-row .label-block { flex: 1; padding-right: 16px; }
-.toggle-row .label-block strong { display: block; font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.toggle-row .label-block span { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.toggle-row .label-block { flex: 1; min-width: 0; }
+.toggle-row .label-block strong { display: block; font-weight: 600; font-size: 13px; margin-bottom: 2px; color: var(--text); }
+.toggle-row .label-block span { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
 
 .switch {
   position: relative;
-  width: 40px;
-  height: 22px;
+  width: 36px;
+  height: 20px;
   background: var(--line);
   border-radius: 999px;
   cursor: pointer;
@@ -566,14 +622,14 @@ input, button, select, textarea, .ui {
   content: '';
   position: absolute;
   top: 2px; left: 2px;
-  width: 18px; height: 18px;
+  width: 16px; height: 16px;
   background: var(--bg-card);
   border-radius: 50%;
   transition: transform 0.15s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 .switch.on { background: var(--accent); }
-.switch.on::after { transform: translateX(18px); }
+.switch.on::after { transform: translateX(16px); }
 
 /* ============================================
    MODAL — bottom-anchored sheet on mobile,
@@ -624,29 +680,30 @@ input, button, select, textarea, .ui {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 24px 24px 12px;
+  padding: var(--space-4) var(--space-5) var(--space-2);
   border-bottom: 1px solid var(--line-soft);
 }
 .modal-header h2 {
   font-family: var(--font-serif);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 600;
   margin: 0;
   color: var(--text);
-  padding-right: 16px;
+  padding-right: var(--space-3);
+  letter-spacing: -0.01em;
 }
 .modal-header .meta {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-dim);
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 24px 24px;
+  padding: var(--space-3) var(--space-5) var(--space-4);
 }
 
 .modal-close {
@@ -655,46 +712,47 @@ input, button, select, textarea, .ui {
   color: var(--text-dim);
   font-size: 18px;
   cursor: pointer;
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  line-height: 1;
 }
 .modal-close:hover { background: var(--line); color: var(--text); }
 
 /* Bottom-anchored action bar */
 .modal-footer {
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--line-soft);
-  background: var(--bg-card);
+  background: var(--bg-soft);
   flex-shrink: 0;
 }
 .modal-footer .btn {
   flex: 1;
-  /* 50% height — pills stay slim */
-  padding: 7px 14px;
+  padding: 8px 14px;
   font-size: 13px;
 }
 
 .modal-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
+.modal-section:last-child { margin-bottom: 0; }
 .modal-section h3 {
   font-family: var(--font-serif);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .section-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--space-2);
 }
 @media (max-width: 480px) {
   .section-stats { grid-template-columns: 1fr; }
@@ -703,39 +761,40 @@ input, button, select, textarea, .ui {
   background: var(--bg-soft);
   border: 1px solid var(--line-soft);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: var(--space-2) var(--space-3);
 }
 .stat-item span {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 600;
   margin-bottom: 2px;
 }
-.stat-item strong { font-size: 15px; color: var(--text); font-weight: 600; }
+.stat-item strong { font-size: 14px; color: var(--text); font-weight: 600; }
 
 .feature-item {
   background: var(--bg-soft);
   border: 1px solid var(--line-soft);
   border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
 }
+.feature-item:last-child { margin-bottom: 0; }
 .feature-item header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
-  gap: 8px;
+  margin-bottom: 2px;
+  gap: var(--space-2);
 }
 .feature-item strong {
   color: var(--text);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
-.feature-item p { font-size: 13px; line-height: 1.5; color: var(--text-dim); margin: 0; }
+.feature-item p { font-size: 12px; line-height: 1.5; color: var(--text-dim); margin: 0; }
 
 /* ============================================
    ACCORDION
@@ -744,15 +803,15 @@ input, button, select, textarea, .ui {
   background: var(--bg-card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   overflow: hidden;
 }
-.accordion.open { box-shadow: var(--shadow); }
+.accordion.open { box-shadow: var(--shadow-card); }
 .accordion-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
   width: 100%;
   background: transparent;
@@ -765,28 +824,69 @@ input, button, select, textarea, .ui {
 }
 .accordion-header:hover { background: var(--bg-soft); }
 .accordion-header .label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   font-weight: 600;
 }
-.accordion-header .value { font-weight: 600; font-size: 15px; }
+.accordion-header .value { font-weight: 600; font-size: 14px; }
 .accordion-header .arrow {
   color: var(--text-dim);
   transition: transform 0.2s;
-  font-size: 12px;
+  font-size: 11px;
 }
 .accordion.open .accordion-header .arrow { transform: rotate(180deg); color: var(--accent); }
-.accordion-body { padding: 0 18px 16px; }
+.accordion-body { padding: 0 var(--space-4) var(--space-3); }
 
 /* ============================================
-   STATS GRID
+   COLLAPSIBLE <details> — token-driven
+   (replaces the browser-default triangle + plain text)
+   ============================================ */
+details.disclosure {
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 0;
+  margin-top: var(--space-3);
+}
+details.disclosure > summary {
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  user-select: none;
+}
+details.disclosure > summary::-webkit-details-marker { display: none; }
+details.disclosure > summary::after {
+  content: '▾';
+  color: var(--text-dim);
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+details.disclosure[open] > summary::after {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+details.disclosure > summary:hover { color: var(--accent); }
+details.disclosure > *:not(summary) {
+  padding: 0 var(--space-4) var(--space-3);
+}
+details.disclosure > *:not(summary):last-child { padding-bottom: var(--space-3); }
+
+/* ============================================
+   STATS GRID — point-buy ability scores
    ============================================ */
 .stat-row-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
+  gap: var(--space-2);
 }
 @media (max-width: 600px) {
   .stat-row-grid { grid-template-columns: repeat(3, 1fr); }
@@ -798,35 +898,35 @@ input, button, select, textarea, .ui {
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px;
+  padding: var(--space-3);
   text-align: center;
 }
-.stat-box .val { font-size: 24px; font-weight: 700; color: var(--accent); font-family: var(--font-serif); }
-.stat-box .mod { font-size: 12px; color: var(--text-dim); }
+.stat-box .val { font-size: 20px; font-weight: 700; color: var(--accent); font-family: var(--font-serif); }
+.stat-box .mod { font-size: 11px; color: var(--text-dim); }
 
 /* ============================================
-   SUMMARY BOX
+   SUMMARY BOX (used in Step 6 review)
    ============================================ */
 .summary-box {
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: var(--space-4);
 }
 .summary-box h3 {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
-.summary-box p { margin: 4px 0; font-size: 14px; }
+.summary-box p { margin: 2px 0; font-size: 13px; }
 .summary-box .summary-row {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: var(--space-1) 0;
   border-bottom: 1px solid var(--line-soft);
-  font-size: 14px;
+  font-size: 13px;
 }
 .summary-box .summary-row:last-child { border-bottom: none; }
 .summary-box .summary-row span:first-child { color: var(--text-dim); }
@@ -838,57 +938,60 @@ input, button, select, textarea, .ui {
   display: block;
   background: var(--bg-card);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px 20px;
+  border-radius: var(--card-radius);
+  padding: var(--space-3) var(--space-4);
   text-decoration: none;
   color: var(--text);
   transition: all 0.15s;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-card);
 }
 .home-card:hover {
   border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg-card);
 }
 .home-card h3 {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: var(--text);
 }
-.home-card .meta { font-size: 12px; color: var(--text-dim); }
-.home-card .stats { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.home-card .meta { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+.home-card .stats { display: flex; gap: var(--space-1); margin-top: var(--space-2); flex-wrap: wrap; }
 .home-card .stat-pill {
   background: var(--bg-soft);
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
   font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .page-header {
   text-align: center;
-  margin-bottom: 32px;
-  padding: 48px 0 24px;
+  margin-bottom: var(--space-6);
+  padding: var(--space-7) 0 var(--space-3);
   position: relative;
 }
 .page-header h1 {
   font-family: var(--font-serif);
-  font-size: 52px;
+  font-size: 36px;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 .page-header p {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: 13px;
   font-style: italic;
+  margin: 0;
 }
 
 /* ============================================

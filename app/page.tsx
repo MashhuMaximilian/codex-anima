@@ -48,7 +48,7 @@ export default function Home() {
         <Link href="/" className="title">
           Codex Anima<small>D&amp;D 5e</small>
         </Link>
-        <div className="flex gap-2 items-center">
+        <div className="topbar-actions">
           <Link href="/builder" className="tbtn primary">+ Build</Link>
           <button className="tbtn" onClick={handleImport}>Import</button>
           <ThemeToggle />
@@ -63,8 +63,8 @@ export default function Home() {
 
         {chars.length === 0 ? (
           <div className="card text-center">
-            <p className="muted mb-4">No characters yet. Begin your tale.</p>
-            <Link href="/builder" className="btn primary inline-block">
+            <p className="muted">No characters yet. Begin your tale.</p>
+            <Link href="/builder" className="btn primary">
               Forge a Character
             </Link>
           </div>
@@ -72,15 +72,15 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {chars.map(c => (
               <div key={c.id} className="relative group">
-                <Link href={`/character/${c.id}`} className="home-card block">
+                <Link href={`/character/${c.id}`} className="home-card">
                   <h3>{c.name || 'Unnamed'}</h3>
                   <div className="meta">
-                    {c.title && <em>&ldquo;{c.title}&rdquo; • </em>}
+                    {c.title && <em>&ldquo;{c.title}&rdquo; · </em>}
                     Lv{c.level} {c.race} {c.class}
                   </div>
                   {(c.subclass || c.subrace) && (
-                    <div className="meta italic mt-1">
-                      {[c.subrace, c.subclass].filter(Boolean).join(' • ')}
+                    <div className="meta italic">
+                      {[c.subrace, c.subclass].filter(Boolean).join(' · ')}
                     </div>
                   )}
                   {c.ac !== undefined && (
@@ -93,18 +93,18 @@ export default function Home() {
                 </Link>
                 <button
                   onClick={() => handleDelete(c.id, c.name)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-transparent border border-current opacity-50 hover:opacity-100 transition flex items-center justify-center"
-                  style={{ color: 'var(--bad)' }}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full border border-current opacity-40 hover:opacity-100 transition flex items-center justify-center"
+                  style={{ color: 'var(--bad)', background: 'transparent' }}
                   title="Delete"
                 >
                   ×
                 </button>
               </div>
             ))}
-            <Link href="/builder" className="home-card text-center flex items-center justify-center min-h-[120px]">
+            <Link href="/builder" className="home-card text-center flex items-center justify-center" style={{ minHeight: 100 }}>
               <div>
-                <div className="text-3xl" style={{ color: 'var(--accent)' }}>+</div>
-                <div className="text-sm muted mt-1">Build New</div>
+                <div className="text-2xl" style={{ color: 'var(--accent)' }}>+</div>
+                <div className="text-xs muted mt-1">Build New</div>
               </div>
             </Link>
           </div>
