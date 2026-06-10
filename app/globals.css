@@ -1373,3 +1373,428 @@ textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3
   .topbar, .btn-row, .modal-footer { display: none; }
   body { background: white; color: black; }
 }
+
+/* ============================================
+   MODAL SCROLL LOCK
+   Set on <body> when any modal is open so the
+   page behind the modal does not scroll.
+   ============================================ */
+body.modal-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ============================================
+   SOURCE FILTER (new component — used in Step 1,
+   and in the Heritage step's local source filter).
+   "All" is a real toggle, not a source itself.
+   ============================================ */
+.source-filter { margin: 0 0 var(--space-3); }
+.source-filter__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.source-filter__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.source-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.source-filter__search {
+  flex: 0 1 100px;
+  min-width: 70px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: inherit;
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.source-filter__search:focus { border-color: var(--accent); }
+.source-filter__count {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.source-filter--compact .source-filter__row {
+  padding: 6px 8px;
+  border-radius: 8px;
+  gap: 6px;
+}
+.source-filter--compact .source-chip { font-size: 9px; padding: 2px 7px; }
+
+/* "All" toggle chip — visually distinct from real sources */
+.source-chip--toggle {
+  font-weight: 700;
+  border-color: var(--line);
+  border-style: dashed;
+  color: var(--text-dim);
+  background: transparent;
+}
+.source-chip--toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  border-style: solid;
+}
+.source-chip--toggle-on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-style: solid;
+  border-color: var(--accent);
+}
+.source-chip--toggle:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ============================================
+   CHECKBOX + OPTIONAL RULES WRAPPER
+   (gap between the two .checkbox-row cards)
+   ============================================ */
+.check-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   HERITAGE / CALLING — two-column layout
+   (desktop: list left, preview right; resizable)
+   (mobile: stack — list full-width, modal still used)
+   ============================================ */
+.split-pane {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+@media (min-width: 768px) {
+  /* Resizable variant — left width is set via --split-left custom prop */
+  .split-pane--resizable {
+    grid-template-columns: var(--split-left, 360px) 6px minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+  }
+}
+
+/* The split-pane__list wraps the inner scrollable area. */
+.split-pane__list,
+.split-pane__left,
+.split-pane__right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .split-pane__list,
+  .split-pane__left,
+  .split-pane__right { max-height: 70vh; }
+}
+
+/* 2-per-row grid on desktop, single column on mobile. */
+.split-pane__list-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  align-content: start;
+}
+@media (max-width: 767px) {
+  .split-pane__list-inner { grid-template-columns: 1fr; }
+}
+
+/* Resize handle — vertical line, with a grip pattern, draggable */
+.split-pane__handle {
+  display: none;
+  cursor: col-resize;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+@media (min-width: 768px) {
+  .split-pane__handle { display: flex; }
+}
+.split-pane__handle::before {
+  content: '';
+  position: absolute;
+  inset: 0 2px;
+  background: var(--line-soft);
+  border-radius: 1px;
+  transition: background 0.15s;
+}
+.split-pane__handle:hover::before,
+.split-pane__handle:focus-visible::before { background: var(--accent); }
+.split-pane__handle-grip {
+  position: relative;
+  z-index: 1;
+  width: 2px;
+  height: 28px;
+  background: var(--text-faint);
+  border-radius: 1px;
+  opacity: 0.6;
+  transition: all 0.15s;
+  background-image: radial-gradient(circle, var(--text-faint) 1px, transparent 1.5px);
+  background-size: 2px 6px;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+.split-pane__handle:hover .split-pane__handle-grip,
+.split-pane__handle:focus-visible .split-pane__handle-grip {
+  opacity: 1;
+  background-image: radial-gradient(circle, var(--accent) 1px, transparent 1.5px);
+}
+
+.split-pane__preview {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: var(--space-4);
+  min-height: 200px;
+  box-shadow: var(--shadow-card);
+  overflow-y: auto;
+  min-width: 0;
+}
+.split-pane__preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 13px;
+}
+.split-pane__preview h3 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--space-1);
+  letter-spacing: -0.01em;
+}
+.split-pane__preview .meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.split-pane__preview .feature-block {
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.split-pane__preview .feature-block:last-child { margin-bottom: 0; }
+.split-pane__preview .feature-block strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.split-pane__preview .feature-block p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  margin: 0;
+}
+.split-pane__preview .preview-actions {
+  margin-top: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
+}
+.split-pane__preview .preview-actions .btn { flex: 1; }
+
+/* List item — compact, two-per-row on desktop */
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.12s;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.list-item:hover { background: var(--bg-soft); border-color: var(--line); }
+.list-item.previewing {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.list-item.selected { font-weight: 600; border-color: var(--accent); }
+.list-item.selected::after {
+  content: '✓';
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.list-item strong {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-item .label-meta {
+  font-size: 9px;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.list-item.selected .label-meta { color: var(--accent); opacity: 0.7; }
+.list-item .label-detail {
+  font-size: 9px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Subrace/subclass section header inside the list */
+.split-pane__sublist {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 6px 4px 0;
+  border-top: 1px solid var(--line-soft);
+  margin-top: 4px;
+}
+@media (max-width: 767px) {
+  .split-pane__sublist { grid-template-columns: 1fr; }
+}
+.split-pane__sublist-label {
+  grid-column: 1 / -1;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 2px;
+  padding: 0 4px;
+}
+.split-pane__sublist .list-item {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE — phone-first compact
+   ============================================ */
+@media (max-width: 640px) {
+  /* Tighter topbar */
+  .topbar { padding: 8px 12px; gap: 8px; }
+  .topbar .title { font-size: 18px; }
+  .topbar .title small { font-size: 9px; margin-left: 6px; }
+  .topbar-actions .tbtn { padding: 5px 10px; font-size: 11px; }
+  .topbar-actions .theme-toggle { width: 28px; height: 28px; font-size: 12px; }
+  /* Smaller page header */
+  .page-header {
+    padding: var(--space-3) 0 var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .page-header h1 { font-size: 28px; }
+  .page-header p { font-size: 12px; }
+  /* Cards: tighter padding */
+  .card { padding: var(--space-3); }
+  .card h2 { font-size: 18px; margin-bottom: 4px; }
+  .card p.muted { font-size: 12px; margin-bottom: var(--space-3); }
+  /* Wrap: less padding so the card uses more screen */
+  .wrap { padding: var(--space-3) var(--space-3) var(--space-5); }
+  /* Modal: full-width sheet with smaller header */
+  .modal-content { max-height: 92vh; }
+  .modal-header { padding: var(--space-3) var(--space-3) var(--space-2); }
+  .modal-header h2 { font-size: 18px; }
+  .modal-body { padding: var(--space-2) var(--space-3) var(--space-3); }
+  .modal-footer { padding: var(--space-2) var(--space-3); }
+  /* Step labels: tiny on phone */
+  .step-label-pill { font-size: 8px; letter-spacing: 0.08em; }
+  /* Stat row: 3-col but smaller */
+  .stat-row-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat-row-grid .form-group label { font-size: 9px; }
+  .stat-row-grid input { padding: 8px 4px; font-size: 14px; }
+  /* Form rows: 1 col on phone */
+  .form-grid { grid-template-columns: 1fr; }
+  /* Buttons: tighter */
+  .btn-row { gap: 6px; }
+  .btn { padding: 8px 12px; font-size: 12px; }
+  /* Pick grid: 2 cols on phone */
+  .pick-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Filter bar: wrap tighter */
+  .filter-bar { gap: 6px; }
+  .filter-bar__search { padding: 8px 10px; font-size: 13px; }
+  .filter-bar__select { padding: 8px 10px; font-size: 12px; }
+  /* Source filter: tighter */
+  .source-filter__row { padding: 6px 8px; gap: 4px; }
+  .source-chip { font-size: 9px; padding: 3px 7px; }
+  .source-filter__label { display: none; }
+  /* Optional rules card: less internal padding */
+  .checkbox-row { padding: 8px 10px; }
+  .checkbox-row .label-block strong { font-size: 13px; }
+  .checkbox-row .label-block span { font-size: 11px; }
+  /* Vital cards: more columns on phone, smaller */
+  .vitals-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .vital-card { padding: 8px 4px; }
+  .vital-value { font-size: 22px; }
+  /* Dash grid: stack */
+  .dash-grid { grid-template-columns: 1fr; }
+  /* Char header: smaller */
+  .char-name { font-size: clamp(22px, 6vw, 32px); }
+}
+
+/* On mobile, hide the resize handle and the right pane. The user
+   taps a list item to open the modal instead. */
+@media (max-width: 767px) {
+  .split-pane--resizable { grid-template-columns: 1fr; }
+  .split-pane__handle,
+  .split-pane__right { display: none; }
+  .split-pane__left { max-height: none; }
+  .split-pane__list-inner { max-height: 60vh; }
+}
+
+/* On desktop, hide the "tap to open preview" affordance — preview is right there. */
+@media (min-width: 768px) {
+  .split-pane .list-item .label-meta { display: none; }
+}
