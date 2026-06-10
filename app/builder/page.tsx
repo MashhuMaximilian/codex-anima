@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Accordion } from '@/components/Accordion';
 import { FilterBar } from '@/components/FilterBar';
 import { Stepper } from '@/components/Stepper';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import SourceFilter from '@/components/SourceFilter';
 import {
   Race,
   DndClass,
@@ -93,6 +94,68 @@ function NumberStatInput({
           if (e.key === 'Enter') {
             (e.target as HTMLInputElement).blur();
           } else if (e.key === 'Escape') {
+            setLocal(String(value));
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * NumberLevelInput — same fix as NumberStatInput, applied to the level
+ * field on the Identity step. The previous raw onChange clamped on every
+ * keystroke, blocking the user from clearing the field to retype.
+ */
+function NumberLevelInput({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+}) {
+  const [local, setLocal] = useState<string>(String(value));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setLocal(String(value));
+  }, [value, focused]);
+
+  const commit = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    if (Number.isNaN(parsed)) {
+      setLocal(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, parsed));
+    setLocal(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
+  return (
+    <div className="form-group" style={{ marginBottom: 0 }}>
+      <label htmlFor="level">Level</label>
+      <input
+        id="level"
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={local}
+        onFocus={() => setFocused(true)}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => {
+          setFocused(false);
+          commit(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          else if (e.key === 'Escape') {
             setLocal(String(value));
             (e.target as HTMLInputElement).blur();
           }
@@ -267,13 +330,20 @@ export default function BuilderPage() {
     });
   }, []);
 
-  // All distinct sources across races + classes (sorted, with PREF first)
+  // Lock body scroll when any modal is open (fixes the "background scrolls
+  // while previewing" bug). Cleanup on unmount removes the class defensively.
+  useEffect(() => {
+    const anyOpen = modalRace || modalClass || modalSubrace || modalSubclass;
+    if (anyOpen) document.body.classList.add('modal-open');
+    else document.body.classList.remove('modal-open');
+    return () => document.body.classList.remove('modal-open');
+  }, [modalRace, modalClass, modalSubrace, modalSubclass]);
+
+  // All distinct sources across races (sorted, with PREF first).
+  // Class source isn't tracked in DndClass data so we derive from races only.
   const allSources = useMemo(() => {
     const set = new Set<string>();
     races.forEach((r) => set.add(r.source));
-    classes.forEach((c) => c.feats.forEach((f) => {
-      // classes have no source in DndClass — skip
-    }));
     const sorted = Array.from(set).sort((a, b) => {
       const ai = PREF_SOURCES.indexOf(a);
       const bi = PREF_SOURCES.indexOf(b);
@@ -282,13 +352,22 @@ export default function BuilderPage() {
       if (bi !== -1) return 1;
       return a.localeCompare(b);
     });
-    return sorted.map((s) => ({ value: s, label: `${s} · ${SOURCE_NAMES[s] || s}` }));
-  }, [races, classes]);
+    return sorted.map((s) => ({ code: s, name: SOURCE_NAMES[s] || s }));
+  }, [races]);
 
+  const setSources = (next: string[]) => {
+    // Block clearing to zero — keep at least one source enabled.
+    if (next.length === 0) return;
+    setEnabledSources(next);
+  };
   const toggleSource = (value: string) => {
-    setEnabledSources((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    setEnabledSources((prev) => {
+      if (prev.includes(value)) {
+        if (prev.length === 1) return prev; // never empty
+        return prev.filter((v) => v !== value);
+      }
+      return [...prev, value];
+    });
   };
 
   const filteredRaces = useMemo(() => {
@@ -423,16 +502,11 @@ export default function BuilderPage() {
             <p className="muted mb-4">Choose the sources to load, the ruleset, and any optional character-build options.</p>
 
             <h3 className="mb-2">Sources</h3>
-            <p className="muted text-sm mb-2">Tap a source to enable or disable it. The builder filters Races &amp; Classes by what you turn on.</p>
-            <FilterBar
-              search={''}
-              onSearchChange={() => {}}
-              chips={{
-                options: allSources,
-                selected: enabledSources,
-                onToggle: toggleSource,
-                onClear: () => setEnabledSources([]),
-              }}
+            <p className="muted text-sm mb-2">Tap a source to enable or disable it. The builder filters Races by what you turn on. The <strong>+ All</strong> / <strong>✕ All</strong> button toggles all sources at once.</p>
+            <SourceFilter
+              sources={allSources}
+              selected={enabledSources}
+              onChange={setSources}
             />
 
             <h3 className="mt-6 mb-2">Ruleset</h3>
@@ -458,32 +532,34 @@ export default function BuilderPage() {
             </div>
 
             <h3 className="mt-6 mb-2">Optional Rules</h3>
-            <div
-              className={`checkbox-row ${tashaCustom ? 'checked' : ''}`}
-              onClick={() => setTashaCustom((v) => !v)}
-            >
-              <div className="label-block">
-                <strong>Tasha&rsquo;s Custom Origin</strong>
-                <span>Replace racial ASI with floating +2/+1 (or +1/+1/+1). Most 5.5e races already use this — disable to lock ASIs to race.</span>
+            <div className="check-cards">
+              <div
+                className={`checkbox-row ${tashaCustom ? 'checked' : ''}`}
+                onClick={() => setTashaCustom((v) => !v)}
+              >
+                <div className="label-block">
+                  <strong>Tasha&rsquo;s Custom Origin</strong>
+                  <span>Replace racial ASI with floating +2/+1 (or +1/+1/+1). Most 5.5e races already use this — disable to lock ASIs to race.</span>
+                </div>
+                <div className="check-icon">{tashaCustom ? '✓' : ''}</div>
               </div>
-              <div className="check-icon">{tashaCustom ? '✓' : ''}</div>
-            </div>
 
-            <div
-              className={`checkbox-row ${level1Feat ? 'checked' : ''}`}
-              onClick={() => setLevel1Feat((v) => !v)}
-            >
-              <div className="label-block">
-                <strong>Level-1 Feat</strong>
-                <span>All characters start with one feat at level 1 (2024 rules default). Uncheck to use the 2014 rule (no L1 feat).</span>
-                {level1Feat && <span className="lvl-1-feat">Active</span>}
+              <div
+                className={`checkbox-row ${level1Feat ? 'checked' : ''}`}
+                onClick={() => setLevel1Feat((v) => !v)}
+              >
+                <div className="label-block">
+                  <strong>Level-1 Feat</strong>
+                  <span>All characters start with one feat at level 1 (2024 rules default). Uncheck to use the 2014 rule (no L1 feat).</span>
+                  {level1Feat && <span className="lvl-1-feat">Active</span>}
+                </div>
+                <div className="check-icon">{level1Feat ? '✓' : ''}</div>
               </div>
-              <div className="check-icon">{level1Feat ? '✓' : ''}</div>
             </div>
 
             <div className="btn-row">
               <Link href="/" className="btn secondary">Cancel</Link>
-              <button className="btn primary" onClick={nextStep}>Next →</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Next →</button>
             </div>
           </div>
         )}
@@ -524,32 +600,16 @@ export default function BuilderPage() {
                   placeholder="it/its"
                 />
               </div>
-              <div className="form-group">
-                <label htmlFor="level">Starting Level</label>
-                <input
-                  id="level"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={20}
-                  value={char.level}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    // Allow empty / partial input while typing
-                    if (raw === '') return;
-                    const parsed = parseInt(raw, 10);
-                    if (Number.isNaN(parsed)) return;
-                    setChar({ ...char, level: Math.max(1, Math.min(20, parsed)) });
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value === '') setChar({ ...char, level: 1 });
-                  }}
-                />
-              </div>
+              <NumberLevelInput
+                value={char.level}
+                min={1}
+                max={20}
+                onChange={(n) => setChar({ ...char, level: n })}
+              />
             </div>
             <div className="btn-row">
-              <button className="btn secondary" onClick={prevStep}>← Back</button>
-              <button className="btn primary" onClick={nextStep}>Next →</button>
+              <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Next →</button>
             </div>
           </div>
         )}
@@ -614,8 +674,8 @@ export default function BuilderPage() {
             </Accordion>
 
             <div className="btn-row">
-              <button className="btn secondary" onClick={prevStep}>← Back</button>
-              <button className="btn primary" onClick={nextStep}>Next →</button>
+              <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Next →</button>
             </div>
           </div>
         )}
@@ -677,8 +737,8 @@ export default function BuilderPage() {
             )}
 
             <div className="btn-row">
-              <button className="btn secondary" onClick={prevStep}>← Back</button>
-              <button className="btn primary" onClick={nextStep}>Next →</button>
+              <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Next →</button>
             </div>
           </div>
         )}
@@ -729,8 +789,8 @@ export default function BuilderPage() {
             )}
 
             <div className="btn-row">
-              <button className="btn secondary" onClick={prevStep}>← Back</button>
-              <button className="btn primary" onClick={nextStep}>Next →</button>
+              <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Next →</button>
             </div>
           </div>
         )}
@@ -762,7 +822,7 @@ export default function BuilderPage() {
             </div>
 
             <div className="btn-row">
-              <button className="btn secondary" onClick={prevStep}>← Back</button>
+              <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
               <button className="btn accent" onClick={handleExport}>Download JSON</button>
               <button className="btn primary" onClick={handleSave}>Save &amp; Open →</button>
             </div>
@@ -814,8 +874,8 @@ export default function BuilderPage() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn secondary" onClick={() => setModalRace(null)}>Cancel</button>
-              <button className="btn primary" onClick={() => { selectRace(modalRace); setModalRace(null); }}>
+              <button type="button" className="btn secondary" onClick={() => setModalRace(null)}>Cancel</button>
+              <button type="button" className="btn primary" onClick={() => { selectRace(modalRace); setModalRace(null); }}>
                 Select {modalRace.name}
               </button>
             </div>
@@ -857,8 +917,8 @@ export default function BuilderPage() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn secondary" onClick={() => setModalSubrace(null)}>Cancel</button>
-              <button className="btn primary" onClick={() => { selectSubrace(modalSubrace.name); setModalSubrace(null); }}>
+              <button type="button" className="btn secondary" onClick={() => setModalSubrace(null)}>Cancel</button>
+              <button type="button" className="btn primary" onClick={() => { selectSubrace(modalSubrace.name); setModalSubrace(null); }}>
                 Select {modalSubrace.name}
               </button>
             </div>
@@ -905,8 +965,8 @@ export default function BuilderPage() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn secondary" onClick={() => setModalClass(null)}>Cancel</button>
-              <button className="btn primary" onClick={() => { selectClass(modalClass); setModalClass(null); }}>
+              <button type="button" className="btn secondary" onClick={() => setModalClass(null)}>Cancel</button>
+              <button type="button" className="btn primary" onClick={() => { selectClass(modalClass); setModalClass(null); }}>
                 Select {modalClass.name}
               </button>
             </div>
@@ -933,8 +993,8 @@ export default function BuilderPage() {
               <p className="muted mt-3 text-sm">You can pick your subclass at level 1 (2024 rules) or wait until level 3 (2014 rules) — either way, this choice is reversible until you save.</p>
             </div>
             <div className="modal-footer">
-              <button className="btn secondary" onClick={() => setModalSubclass(null)}>Cancel</button>
-              <button className="btn primary" onClick={() => { selectSubclass(modalSubclass.name); setModalSubclass(null); }}>
+              <button type="button" className="btn secondary" onClick={() => setModalSubclass(null)}>Cancel</button>
+              <button type="button" className="btn primary" onClick={() => { selectSubclass(modalSubclass.name); setModalSubclass(null); }}>
                 Select {modalSubclass.name}
               </button>
             </div>
