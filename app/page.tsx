@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getAllCharacters, importCharacter, deleteCharacter } from '@/lib/storage';
 import { Character } from '@/lib/types';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Home() {
   const [chars, setChars] = useState<Character[]>([]);
@@ -44,16 +45,19 @@ export default function Home() {
   return (
     <div>
       <div className="topbar">
-        <span className="title">Character Sheets<small>D&D 5e</small></span>
-        <div className="flex gap-2">
-          <Link href="/builder" className="tbtn">+ Build</Link>
+        <Link href="/" className="title">
+          Codex Anima<small>D&amp;D 5e</small>
+        </Link>
+        <div className="flex gap-2 items-center">
+          <Link href="/builder" className="tbtn primary">+ Build</Link>
           <button className="tbtn" onClick={handleImport}>Import</button>
+          <ThemeToggle />
         </div>
       </div>
 
       <div className="wrap">
         <div className="page-header">
-          <h1>Codex of Souls</h1>
+          <h1>Codex Anima</h1>
           <p>— A ledger of the living, the lost, and the in-between —</p>
         </div>
 
@@ -71,7 +75,7 @@ export default function Home() {
                 <Link href={`/character/${c.id}`} className="home-card block">
                   <h3>{c.name || 'Unnamed'}</h3>
                   <div className="meta">
-                    {c.title && <em>"{c.title}" • </em>}
+                    {c.title && <em>&ldquo;{c.title}&rdquo; • </em>}
                     Lv{c.level} {c.race} {c.class}
                   </div>
                   {(c.subclass || c.subrace) && (
@@ -89,7 +93,8 @@ export default function Home() {
                 </Link>
                 <button
                   onClick={() => handleDelete(c.id, c.name)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-zinc-700 text-sm opacity-0 group-hover:opacity-100 transition"
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-transparent border border-current opacity-50 hover:opacity-100 transition flex items-center justify-center"
+                  style={{ color: 'var(--bad)' }}
                   title="Delete"
                 >
                   ×
@@ -98,8 +103,8 @@ export default function Home() {
             ))}
             <Link href="/builder" className="home-card text-center flex items-center justify-center min-h-[120px]">
               <div>
-                <div className="text-3xl text-zinc-600">+</div>
-                <div className="text-sm text-zinc-500 mt-1">Build New</div>
+                <div className="text-3xl" style={{ color: 'var(--accent)' }}>+</div>
+                <div className="text-sm muted mt-1">Build New</div>
               </div>
             </Link>
           </div>
