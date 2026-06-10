@@ -165,15 +165,88 @@ function NumberLevelInput({
   );
 }
 
+/**
+ * ResizableSplitPane — two-column layout with a draggable divider.
+ * On desktop: list (left) is a fixed pixel width, preview (right) flexes.
+ * On mobile: handle and right pane are hidden via CSS; the right pane
+ * just doesn't render. The parent component is responsible for opening
+ * a modal instead on mobile (via the isDesktop boolean).
+ *
+ * Uses pointer events for mouse + touch. setPointerCapture keeps the drag
+ * alive even if the cursor leaves the handle. Double-click resets to 360px.
+ */
+function ResizableSplitPane({
+  leftPx,
+  onLeftPxChange,
+  minLeft = 240,
+  maxLeft = 640,
+  children,
+}: {
+  leftPx: number;
+  onLeftPxChange: (n: number) => void;
+  minLeft?: number;
+  maxLeft?: number;
+  children: [React.ReactNode, React.ReactNode];
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const clamped = Math.max(minLeft, Math.min(maxLeft, x));
+    onLeftPxChange(clamped);
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    try { (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId); } catch {}
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+  const onDoubleClick = () => onLeftPxChange(360);
+
+  return (
+    <div
+      ref={containerRef}
+      className="split-pane split-pane--resizable"
+      style={{ ['--split-left' as any]: `${leftPx}px` }}
+    >
+      <div className="split-pane__list split-pane__left">{children[0]}</div>
+      <div
+        className="split-pane__handle"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize panels (drag, or double-click to reset)"
+        tabIndex={0}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onDoubleClick={onDoubleClick}
+      >
+        <span className="split-pane__handle-grip" aria-hidden="true" />
+      </div>
+      <div className="split-pane__right">{children[1]}</div>
+    </div>
+  );
+}
+
 interface RawSubrace {
   name: string;
   raceName?: string;
   source?: string;
   entries?: any[];
   ability?: any;
-}
-
-interface RawRace {
+}interface RawRace {
   name: string;
   source: string;
   size?: string[];
@@ -322,6 +395,43 @@ export default function BuilderPage() {
   const [modalSubrace, setModalSubrace] = useState<Subrace | null>(null);
   const [modalSubclass, setModalSubclass] = useState<Subclass | null>(null);
 
+  // Preview state — the item currently shown in the right-hand pane
+  // (desktop split-pane). Independent of the selected one.
+  const [previewRaceKey, setPreviewRaceKey] = useState<string | null>(null);
+  const [previewClassKey, setPreviewClassKey] = useState<string | null>(null);
+  const [previewSubraceName, setPreviewSubraceName] = useState<string | null>(null);
+  const [previewSubclassName, setPreviewSubclassName] = useState<string | null>(null);
+
+  // Resizable split-pane widths (px) for Heritage/Calling on desktop.
+  // Persisted to localStorage so the user's preferred split sticks.
+  const [heritageSplitPx, setHeritageSplitPx] = useState<number>(360);
+  const [callingSplitPx, setCallingSplitPx] = useState<number>(360);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const h = localStorage.getItem('codex.heritageSplitPx');
+    const c = localStorage.getItem('codex.callingSplitPx');
+    if (h) setHeritageSplitPx(parseInt(h, 10) || 360);
+    if (c) setCallingSplitPx(parseInt(c, 10) || 360);
+  }, []);
+  useEffect(() => { try { localStorage.setItem('codex.heritageSplitPx', String(heritageSplitPx)); } catch {} }, [heritageSplitPx]);
+  useEffect(() => { try { localStorage.setItem('codex.callingSplitPx', String(callingSplitPx)); } catch {} }, [callingSplitPx]);
+
+  // Local source filter for the Heritage step. null = use enabledSources
+  // (the Step-1 master). Setting a non-null value overrides for this step only.
+  const [heritageSources, setHeritageSources] = useState<string[] | null>(null);
+
+  // Viewport width — used to decide between preview-pane (desktop) and
+  // modal (mobile) for race/class selection.
+  const [isDesktop, setIsDesktop] = useState<boolean>(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   useEffect(() => {
     Promise.all([loadAllRaces(), loadAllClasses()]).then(([r, c]) => {
       setRaces(r);
@@ -370,13 +480,18 @@ export default function BuilderPage() {
     });
   };
 
+  // Effective source list used in the Heritage step's local filter.
+  // If the user has NOT changed the local filter (null), fall back to the
+  // Step-1 enabledSources. If they HAVE changed it, use their local choice.
+  const effectiveHeritageSources = heritageSources ?? enabledSources;
+
   const filteredRaces = useMemo(() => {
     return races.filter((r) => {
-      if (!enabledSources.includes(r.source)) return false;
+      if (!effectiveHeritageSources.includes(r.source)) return false;
       if (raceSearch && !r.name.toLowerCase().includes(raceSearch.toLowerCase())) return false;
       return true;
     });
-  }, [races, raceSearch, enabledSources]);
+  }, [races, raceSearch, effectiveHeritageSources]);
 
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
@@ -389,6 +504,21 @@ export default function BuilderPage() {
 
   const selectedRace = races.find((r) => r.name === char.race);
   const selectedClass = classes.find((c) => c.key === char.klass);
+
+  // Derive the items currently shown in the right-hand preview pane.
+  // Priority: user-clicked preview > currently selected item > null.
+  const previewRace = previewRaceKey
+    ? races.find((r) => r.key === previewRaceKey) || null
+    : selectedRace || null;
+  const previewClass = previewClassKey
+    ? classes.find((c) => c.key === previewClassKey) || null
+    : selectedClass || null;
+  const previewSubrace = previewSubraceName && selectedRace
+    ? selectedRace.subraces.find((sr) => sr.name === previewSubraceName) || null
+    : null;
+  const previewSubclass = previewSubclassName && selectedClass
+    ? selectedClass.subs.find((s) => s.name === previewSubclassName) || null
+    : null;
 
   const selectRace = (race: Race) => {
     setChar((prev) => ({ ...prev, race: race.name, subrace: '' }));
@@ -618,60 +748,173 @@ export default function BuilderPage() {
         {step === 3 && (
           <div className="card">
             <h2>III. Heritage</h2>
-            <p className="muted mb-4">Pick a race, then drill into subrace if available. Race opens a detail modal; subrace is a quick toggle inside.</p>
+            <p className="muted mb-3">Pick a race from the list on the left — its details appear on the right. On mobile, tap a race to open its preview.</p>
 
-            <Accordion title="Race" summary={char.race || '— Choose —'} defaultOpen>
-              <FilterBar
-                search={raceSearch}
-                onSearchChange={setRaceSearch}
-                searchPlaceholder="Search races…"
-              />
-              <div className="pick-grid">
-                {filteredRaces.slice(0, 60).map((r) => (
-                  <button
-                    key={r.key}
-                    type="button"
-                    className={`pick-card ${char.race === r.name ? 'selected' : ''}`}
-                    onClick={() => setModalRace(r)}
-                  >
-                    <strong>{r.name}</strong>
-                    <span className="source-tag">{SOURCE_NAMES[r.source] || r.source}</span>
-                  </button>
-                ))}
-                {filteredRaces.length === 0 && (
-                  <p className="muted col-span-full">No races match your filters</p>
-                )}
-              </div>
-            </Accordion>
+            <SourceFilter
+              sources={allSources}
+              selected={effectiveHeritageSources}
+              onChange={(next) => {
+                // If the user picks exactly the same set as enabledSources, treat as no-op
+                // (so the local override resets). Otherwise store the override.
+                if (next.length === enabledSources.length && next.every((c) => enabledSources.includes(c))) {
+                  setHeritageSources(null);
+                } else {
+                  setHeritageSources(next);
+                }
+              }}
+              compact
+            />
+            <FilterBar
+              search={raceSearch}
+              onSearchChange={setRaceSearch}
+              searchPlaceholder="Search races…"
+            />
 
-            {selectedRace && (
-              <Accordion
-                title="Subrace"
-                summary={char.subrace || '— Optional —'}
-              >
-                {selectedRace.subraces.length === 0 ? (
-                  <p className="muted">No subraces for {selectedRace.name}.</p>
+            <ResizableSplitPane
+              leftPx={heritageSplitPx}
+              onLeftPxChange={setHeritageSplitPx}
+              minLeft={240}
+              maxLeft={640}
+            >
+              <div className="split-pane__list-inner">
+                {filteredRaces.length === 0 ? (
+                  <p className="muted p-3" style={{ gridColumn: '1 / -1' }}>No races match your filters</p>
                 ) : (
-                  <div className="pick-grid">
-                    {selectedRace.subraces.map((sr) => (
+                  <>
+                    {filteredRaces.map((r) => (
                       <button
-                        key={sr.name}
+                        key={r.key}
                         type="button"
-                        className={`pick-card ${char.subrace === sr.name ? 'selected' : ''}`}
-                        onClick={() => setModalSubrace(sr)}
+                        className={`list-item ${previewRaceKey === r.key ? 'previewing' : ''} ${char.race === r.name ? 'selected' : ''}`}
+                        onClick={() => {
+                          if (isDesktop) setPreviewRaceKey(r.key);
+                          else setModalRace(r);
+                        }}
                       >
-                        <strong>{sr.name}</strong>
-                        {sr.text && <span className="desc">{sr.text.slice(0, 60)}…</span>}
+                        <strong>{r.name}</strong>
                       </button>
                     ))}
-                  </div>
+                    {selectedRace && selectedRace.subraces.length > 0 && (
+                      <div className="split-pane__sublist">
+                        <p className="split-pane__sublist-label">Subrace</p>
+                        {selectedRace.subraces.map((sr) => (
+                          <button
+                            key={sr.name}
+                            type="button"
+                            className={`list-item ${previewSubraceName === sr.name ? 'previewing' : ''} ${char.subrace === sr.name ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (isDesktop) setPreviewSubraceName(sr.name);
+                              else setModalSubrace(sr);
+                            }}
+                          >
+                            <strong>{sr.name}</strong>
+                            {sr.ability && Object.keys(sr.ability).length > 0 && (
+                              <span className="label-meta">
+                                {Object.entries(sr.ability).map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ')}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
-              </Accordion>
-            )}
+              </div>
 
-            <Accordion title="Background" summary="— Coming soon —">
+              <div className={`split-pane__preview ${!previewRace ? 'split-pane__preview--empty' : ''}`}>
+                {!previewRace && <p>← Pick a race to preview it</p>}
+                {previewRace && (
+                  <>
+                    <h3>{previewRace.name}</h3>
+                    <div className="meta">
+                      <span className="source-tag">{SOURCE_NAMES[previewRace.source] || previewRace.source}</span>
+                      <span>·</span>
+                      <span>{previewRace.size} · {previewRace.speed} ft</span>
+                    </div>
+                    {Object.keys(previewRace.ability).length > 0 && (
+                      <div className="section-stats" style={{ marginBottom: 12 }}>
+                        {Object.entries(previewRace.ability).map(([k, v]) => (
+                          <div key={k} className="stat-item">
+                            <span>{k.toUpperCase()}</span>
+                            <strong>+{String(v)}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {previewRace.feats.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>Features</h3>
+                        {previewRace.feats.slice(0, 6).map((f, i) => (
+                          <div key={i} className="feature-block">
+                            {f.name && <strong>{f.name}</strong>}
+                            <p>{f.text}</p>
+                          </div>
+                        ))}
+                        {previewRace.feats.length > 6 && (
+                          <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewRace.feats.length - 6} more features</p>
+                        )}
+                      </div>
+                    )}
+                    {previewSubrace && (
+                      <div style={{ marginTop: 12, borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
+                        <p className="split-pane__sublist-label" style={{ marginBottom: 6 }}>
+                          Subrace: {previewSubrace.name}
+                        </p>
+                        {previewSubrace.ability && Object.keys(previewSubrace.ability).length > 0 && (
+                          <div className="section-stats" style={{ marginBottom: 8 }}>
+                            {Object.entries(previewSubrace.ability).map(([k, v]) => (
+                              <div key={k} className="stat-item">
+                                <span>{k.toUpperCase()}</span>
+                                <strong>+{String(v)}</strong>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {previewSubrace.text && (
+                          <p style={{ color: 'var(--text-dim)', fontSize: 12, lineHeight: 1.5 }}>{previewSubrace.text}</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="preview-actions">
+                      <button
+                        type="button"
+                        className={`btn ${char.race === previewRace.name ? 'accent' : 'primary'}`}
+                        onClick={() => {
+                          if (char.race === previewRace.name) {
+                            setChar((p) => ({ ...p, race: '', subrace: '' }));
+                            setPreviewRaceKey(null);
+                          } else {
+                            selectRace(previewRace);
+                            // Auto-select first subrace if there's only one
+                            if (previewRace.subraces.length === 1) {
+                              selectSubrace(previewRace.subraces[0].name);
+                            } else {
+                              setChar((p) => ({ ...p, subrace: '' }));
+                            }
+                          }
+                        }}
+                      >
+                        {char.race === previewRace.name ? '✕ Deselect' : `Select ${previewRace.name}`}
+                      </button>
+                      {previewSubrace && (
+                        <button
+                          type="button"
+                          className={`btn ${char.subrace === previewSubrace.name ? 'accent' : 'secondary'}`}
+                          onClick={() => selectSubrace(previewSubrace.name)}
+                        >
+                          {char.subrace === previewSubrace.name ? '✕ Deselect subrace' : 'Select subrace'}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </ResizableSplitPane>
+
+            <details className="disclosure">
+              <summary>Background — coming in Phase B</summary>
               <p className="muted">Background selection arrives in Phase B. For now, focus on Race + Subrace.</p>
-            </Accordion>
+            </details>
 
             <div className="btn-row">
               <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
@@ -684,57 +927,148 @@ export default function BuilderPage() {
         {step === 4 && (
           <div className="card">
             <h2>IV. Calling</h2>
-            <p className="muted mb-4">Choose a class. Subclass is optional at level 1 — open the class modal to drill in.</p>
+            <p className="muted mb-3">Choose a class from the list on the left — its features and subclass options appear on the right.</p>
 
-            <Accordion title="Class" summary={char.class || '— Choose —'} defaultOpen>
-              <FilterBar
-                search={classSearch}
-                onSearchChange={setClassSearch}
-                searchPlaceholder="Search classes…"
-                extraFilters={[{
-                  value: classSpell,
-                  label: 'Type',
-                  onChange: setClassSpell,
-                  selected: classSpell,
-                  options: [
-                    { value: '', label: 'All' },
-                    { value: 'yes', label: 'Casters' },
-                    { value: 'no', label: 'Martial' },
-                  ],
-                }]}
-              />
-              <div className="pick-grid">
-                {filteredClasses.map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    className={`pick-card ${char.klass === c.key ? 'selected' : ''}`}
-                    onClick={() => setModalClass(c)}
-                  >
-                    <strong>{c.name}</strong>
-                    <span className="source-tag">d{c.hitDie} • {c.spell || 'martial'}</span>
-                  </button>
-                ))}
+            <FilterBar
+              search={classSearch}
+              onSearchChange={setClassSearch}
+              searchPlaceholder="Search classes…"
+              extraFilters={[{
+                value: classSpell,
+                label: 'Type',
+                onChange: setClassSpell,
+                selected: classSpell,
+                options: [
+                  { value: '', label: 'All' },
+                  { value: 'yes', label: 'Casters' },
+                  { value: 'no', label: 'Martial' },
+                ],
+              }]}
+            />
+
+            <ResizableSplitPane
+              leftPx={callingSplitPx}
+              onLeftPxChange={setCallingSplitPx}
+              minLeft={240}
+              maxLeft={640}
+            >
+              <div className="split-pane__list-inner">
+                {filteredClasses.length === 0 ? (
+                  <p className="muted p-3" style={{ gridColumn: '1 / -1' }}>No classes match your filters</p>
+                ) : (
+                  <>
+                    {filteredClasses.map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        className={`list-item ${previewClassKey === c.key ? 'previewing' : ''} ${char.klass === c.key ? 'selected' : ''}`}
+                        onClick={() => {
+                          if (isDesktop) setPreviewClassKey(c.key);
+                          else setModalClass(c);
+                        }}
+                      >
+                        <strong>{c.name}</strong>
+                        <span className="label-meta">d{c.hitDie} · {c.spell || 'martial'}</span>
+                      </button>
+                    ))}
+                    {selectedClass && selectedClass.subs.length > 0 && (
+                      <div className="split-pane__sublist">
+                        <p className="split-pane__sublist-label">Subclass</p>
+                        {selectedClass.subs.map((s) => (
+                          <button
+                            key={s.name}
+                            type="button"
+                            className={`list-item ${previewSubclassName === s.name ? 'previewing' : ''} ${char.subclass === s.name ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (isDesktop) setPreviewSubclassName(s.name);
+                              else setModalSubclass(s);
+                            }}
+                          >
+                            <strong>{s.name}</strong>
+                            <span className="label-meta">subclass</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            </Accordion>
 
-            {selectedClass && selectedClass.subs.length > 0 && (
-              <Accordion title="Subclass" summary={char.subclass || '— Optional —'}>
-                <div className="pick-grid">
-                  {selectedClass.subs.map((s) => (
-                    <button
-                      key={s.name}
-                      type="button"
-                      className={`pick-card ${char.subclass === s.name ? 'selected' : ''}`}
-                      onClick={() => setModalSubclass(s)}
-                    >
-                      <strong>{s.name}</strong>
-                      <span className="desc">{s.text}</span>
-                    </button>
-                  ))}
-                </div>
-              </Accordion>
-            )}
+              <div className={`split-pane__preview ${!previewClass ? 'split-pane__preview--empty' : ''}`}>
+                {!previewClass && <p>← Pick a class to preview it</p>}
+                {previewClass && (
+                  <>
+                    <h3>{previewClass.name}</h3>
+                    <div className="meta">
+                      <span>d{previewClass.hitDie} hit die</span>
+                      <span>·</span>
+                      <span>{previewClass.spell || 'martial'}</span>
+                      <span>·</span>
+                      <span>{previewClass.subs.length} subclass{previewClass.subs.length === 1 ? '' : 'es'}</span>
+                    </div>
+                    <div className="section-stats" style={{ marginBottom: 12 }}>
+                      <div className="stat-item"><span>Hit Die</span><strong>d{previewClass.hitDie}</strong></div>
+                      <div className="stat-item"><span>Saves</span><strong>{previewClass.saves.join(', ').toUpperCase()}</strong></div>
+                      <div className="stat-item"><span>Spellcasting</span><strong>{previewClass.spell || 'None'}</strong></div>
+                      <div className="stat-item"><span>Subclasses</span><strong>{previewClass.subs.length}</strong></div>
+                    </div>
+                    {previewClass.feats.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>
+                          Class Features ({previewClass.feats.length})
+                        </h3>
+                        {previewClass.feats.slice(0, 8).map((f, i) => (
+                          <div key={i} className="feature-block">
+                            <strong>{f.name}</strong>
+                            <p>{f.text}</p>
+                          </div>
+                        ))}
+                        {previewClass.feats.length > 8 && (
+                          <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewClass.feats.length - 8} more features</p>
+                        )}
+                      </div>
+                    )}
+                    {previewSubclass && (
+                      <div style={{ marginTop: 12, borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
+                        <p className="split-pane__sublist-label" style={{ marginBottom: 6 }}>
+                          Subclass: {previewSubclass.name}
+                        </p>
+                        {previewSubclass.text && (
+                          <p style={{ color: 'var(--text-dim)', fontSize: 12, lineHeight: 1.5 }}>{previewSubclass.text}</p>
+                        )}
+                        <p className="muted text-sm" style={{ marginTop: 4 }}>You can pick at level 1 (2024) or level 3 (2014) — reversible until you save.</p>
+                      </div>
+                    )}
+                    <div className="preview-actions">
+                      <button
+                        type="button"
+                        className={`btn ${char.klass === previewClass.key ? 'accent' : 'primary'}`}
+                        onClick={() => {
+                          if (char.klass === previewClass.key) {
+                            setChar((p) => ({ ...p, klass: '', class: '', subclass: '' }));
+                            setPreviewClassKey(null);
+                          } else {
+                            selectClass(previewClass);
+                            setChar((p) => ({ ...p, subclass: '' }));
+                          }
+                        }}
+                      >
+                        {char.klass === previewClass.key ? '✕ Deselect' : `Select ${previewClass.name}`}
+                      </button>
+                      {previewSubclass && (
+                        <button
+                          type="button"
+                          className={`btn ${char.subclass === previewSubclass.name ? 'accent' : 'secondary'}`}
+                          onClick={() => selectSubclass(previewSubclass.name)}
+                        >
+                          {char.subclass === previewSubclass.name ? '✕ Deselect subclass' : 'Select subclass'}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </ResizableSplitPane>
 
             <div className="btn-row">
               <button type="button" className="btn secondary" onClick={prevStep}>← Back</button>
