@@ -792,6 +792,7 @@ export default function BuilderPage() {
                         }}
                       >
                         <strong>{r.name}</strong>
+                        <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
                       </button>
                     ))}
                     {selectedRace && selectedRace.subraces.length > 0 && (
