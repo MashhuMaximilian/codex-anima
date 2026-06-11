@@ -864,9 +864,41 @@ details.disclosure > summary {
   user-select: none;
 }
 details.disclosure > summary::-webkit-details-marker { display: none; }
-details.disclosure > summary::after {
-  content: '▾';
+details.disclosure[open] > summary::after {
+  content: '▴';
+}
+
+/* Heritage-specific disclosure for source filter - starts open by default */
+details.heritage-disclosure {
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+  background: var(--bg-soft);
+  border-color: var(--line);
+}
+details.heritage-disclosure > summary {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
   color: var(--text-dim);
+  padding: var(--space-2) var(--space-3);
+}
+details.heritage-disclosure > summary span:first-child {
+  flex: 1;
+}
+.heritage-disclosure__count {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+details.heritage-disclosure > summary::after {
+  color: var(--text-faint);
+}
+
+/* Regular disclosure arrow transition */
+details.disclosure > summary::after {
   font-size: 10px;
   transition: transform 0.2s;
 }

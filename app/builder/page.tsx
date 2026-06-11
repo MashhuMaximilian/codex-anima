@@ -750,20 +750,22 @@ export default function BuilderPage() {
             <h2>III. Heritage</h2>
             <p className="muted mb-3">Pick a race from the list on the left — its details appear on the right. On mobile, tap a race to open its preview.</p>
 
-            <SourceFilter
-              sources={allSources}
-              selected={effectiveHeritageSources}
-              onChange={(next) => {
-                // If the user picks exactly the same set as enabledSources, treat as no-op
-                // (so the local override resets). Otherwise store the override.
-                if (next.length === enabledSources.length && next.every((c) => enabledSources.includes(c))) {
-                  setHeritageSources(null);
-                } else {
-                  setHeritageSources(next);
-                }
-              }}
-              compact
-            />
+            <details className="disclosure heritage-disclosure">
+              <summary><span>Source Filter</span><span className="heritage-disclosure__count">{effectiveHeritageSources.length}/{allSources.length}</span></summary>
+              <SourceFilter
+                sources={allSources}
+                selected={effectiveHeritageSources}
+                onChange={(next) => {
+                  if (next.length === enabledSources.length && next.every((c) => enabledSources.includes(c))) {
+                    setHeritageSources(null);
+                  } else {
+                    setHeritageSources(next);
+                  }
+                }}
+                compact
+              />
+            </details>
+
             <FilterBar
               search={raceSearch}
               onSearchChange={setRaceSearch}
