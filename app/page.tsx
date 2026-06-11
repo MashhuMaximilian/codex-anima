@@ -46,7 +46,7 @@ export default function Home() {
     <div>
       <div className="topbar">
         <Link href="/" className="title">
-          Codex Anima<small>D&amp;D 5e</small>
+          d20.build<small>Codex Anima</small>
         </Link>
         <div className="topbar-actions">
           <Link href="/builder" className="tbtn primary">+ Build</Link>
@@ -57,7 +57,7 @@ export default function Home() {
 
       <div className="wrap">
         <div className="page-header">
-          <h1>Codex Anima</h1>
+          <h1>d20.build Codex Anima</h1>
           <p>— A ledger of the living, the lost, and the in-between —</p>
         </div>
 

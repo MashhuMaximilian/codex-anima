@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Codex Anima — D&D 5e",
-  description: "A ledger of the living, the lost, and the in-between — character sheets, builder, and dashboard for D&D 5e",
+  title: "d20.build Codex Anima",
+  description: "A ledger of the living, the lost, and the in-between — character sheets, builder, and dashboard",
 };
 
 // Theme bootstrap — runs before React hydrates so we don't get a flash

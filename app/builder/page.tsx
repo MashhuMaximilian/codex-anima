@@ -599,7 +599,7 @@ export default function BuilderPage() {
     return (
       <div>
         <div className="topbar">
-          <Link href="/" className="title">Codex Anima<small>D&amp;D 5e</small></Link>
+          <Link href="/" className="title">d20.build<small>Codex Anima</small></Link>
           <div className="topbar-actions">
             <ThemeToggle />
           </div>
@@ -614,7 +614,7 @@ export default function BuilderPage() {
   return (
     <div>
       <div className="topbar">
-        <Link href="/" className="title">Codex Anima<small>Builder</small></Link>
+        <Link href="/" className="title">d20.build<small>Codex Anima</small></Link>
         <div className="topbar-actions">
           <Link href="/" className="tbtn">Home</Link>
           <button className="tbtn" onClick={handleImport}>Import</button>

@@ -56,7 +56,7 @@ export default function CharacterView({ params }: PageProps) {
     return (
       <div>
         <div className="topbar">
-          <Link href="/" className="title">Codex<small>of Souls</small></Link>
+          <Link href="/" className="title">d20.build<small>Codex Anima</small></Link>
         </div>
         <div className="wrap text-center py-20">
           <p className="muted">Loading character...</p>
@@ -113,7 +113,7 @@ export default function CharacterView({ params }: PageProps) {
   return (
     <div>
       <div className="topbar">
-        <Link href="/" className="title">Codex<small>of Souls</small></Link>
+        <Link href="/" className="title">d20.build<small>Codex Anima</small></Link>
         <div className="flex gap-2">
           {!editMode ? (
             <>
