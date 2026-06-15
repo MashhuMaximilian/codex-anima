@@ -305,7 +305,9 @@ async function loadAllRaces(): Promise<Race[]> {
   });
 
   for (const r of sorted as RawRace[]) {
-    if (seen.has(r.name)) continue;
+    // Dedupe by name+source combo, not just name
+    const raceKey = `${r.name}-${r.source}`;
+    if (seen.has(raceKey)) continue;
     if (['PSA', 'PSD', 'AAG'].includes(r.source)) continue;
 
     const feats: { name: string; text: string }[] = [];
@@ -320,8 +322,8 @@ async function loadAllRaces(): Promise<Race[]> {
       for (const a of r.ability) Object.assign(ability, a);
     } else if (r.ability) Object.assign(ability, r.ability);
 
-    seen.set(r.name, {
-      key: r.name.toLowerCase().replace(/[^a-z]/g, '-'),
+    seen.set(raceKey, {
+      key: `${r.name.toLowerCase().replace(/[^a-z]/g, '-')}-${r.source.toLowerCase()}`,
       name: r.name, source: r.source,
       size: r.size?.[0] || 'M', speed: r.speed?.walk || 30,
       ability, feats, subraces,
