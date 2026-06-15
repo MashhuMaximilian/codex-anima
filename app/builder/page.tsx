@@ -883,6 +883,26 @@ export default function BuilderPage() {
                         )}
                       </div>
                     )}
+                    {/* Show all available subraces for selection */}
+                    {previewRace.subraces.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>Subraces</h3>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {previewRace.subraces.map((sr) => (
+                            <button
+                              key={sr.name}
+                              type="button"
+                              className={`source-chip ${char.subrace === sr.name ? 'source-chip--active' : ''}`}
+                              onClick={() => {
+                                setChar({ ...char, subrace: sr.name });
+                              }}
+                            >
+                              {sr.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {previewSubrace && (
                       <div style={{ marginTop: 12, borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
                         <p className="split-pane__sublist-label" style={{ marginBottom: 6 }}>
@@ -1067,6 +1087,28 @@ export default function BuilderPage() {
                         {previewClass.feats.length > 8 && (
                           <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewClass.feats.length - 8} more features</p>
                         )}
+                      </div>
+                    )}
+                    {/* Show all available subclasses for selection */}
+                    {previewClass.subs.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>
+                          Subclasses
+                        </h3>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {previewClass.subs.map((s) => (
+                            <button
+                              key={s.name}
+                              type="button"
+                              className={`source-chip ${char.subclass === s.name ? 'source-chip--active' : ''}`}
+                              onClick={() => {
+                                setChar({ ...char, subclass: s.name });
+                              }}
+                            >
+                              {s.name}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                     {previewSubclass && (
