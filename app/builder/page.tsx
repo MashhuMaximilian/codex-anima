@@ -797,10 +797,11 @@ export default function BuilderPage() {
                         <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
                       </button>
                     ))}
-                    {selectedRace && selectedRace.subraces.length > 0 && (
-                      <div className="split-pane__sublist">
-                        <p className="split-pane__sublist-label">Subrace</p>
-                        {selectedRace.subraces.map((sr) => (
+                    {/* Subrace - always show the section */}
+                    <div className="split-pane__sublist">
+                      <p className="split-pane__sublist-label">Subrace</p>
+                      {selectedRace && selectedRace.subraces.length > 0 ? (
+                        selectedRace.subraces.map((sr) => (
                           <button
                             key={sr.name}
                             type="button"
@@ -817,9 +818,11 @@ export default function BuilderPage() {
                               </span>
                             )}
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        ))
+                      ) : (
+                        <p className="muted text-sm p-2">Select a race to see subraces</p>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -974,10 +977,11 @@ export default function BuilderPage() {
                         <span className="label-meta">d{c.hitDie} · {c.spell || 'martial'}</span>
                       </button>
                     ))}
-                    {selectedClass && selectedClass.subs.length > 0 && (
-                      <div className="split-pane__sublist">
-                        <p className="split-pane__sublist-label">Subclass</p>
-                        {selectedClass.subs.map((s) => (
+                    {/* Subclass - always show the section */}
+                    <div className="split-pane__sublist">
+                      <p className="split-pane__sublist-label">Subclass</p>
+                      {selectedClass && selectedClass.subs.length > 0 ? (
+                        selectedClass.subs.map((s) => (
                           <button
                             key={s.name}
                             type="button"
@@ -990,9 +994,11 @@ export default function BuilderPage() {
                             <strong>{s.name}</strong>
                             <span className="label-meta">subclass</span>
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        ))
+                      ) : (
+                        <p className="muted text-sm p-2">Select a class to see subclasses</p>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
