@@ -277,9 +277,15 @@ input, button, select, textarea, .ui {
 .card .muted:last-child { margin-bottom: 0; }
 
 .wrap {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) var(--space-7);
+}
+@media (max-width: 1024px) {
+  .wrap { max-width: 900px; }
+}
+@media (max-width: 768px) {
+  .wrap { max-width: 100%; }
 }
 
 /* ============================================
@@ -1541,12 +1547,12 @@ body.modal-open {
   .split-pane__right { max-height: 70vh; }
 }
 
-/* 2-per-row grid on desktop, single column on mobile. */
+/* 2-per-row grid on desktop, 3-col on large screens, single column on mobile. */
 .split-pane__list-inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 6px;
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -1561,14 +1567,23 @@ body.modal-open {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  padding: 8px 10px;
+  min-height: 48px;
+}
+.split-pane__list-inner .list-item strong {
+  font-size: 14px;
+  line-height: 1.3;
 }
 .split-pane__list-inner .list-item .label-meta {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-@media (max-width: 767px) {
+@media (max-width: 1024px) {
+  .split-pane__list-inner { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
   .split-pane__list-inner { grid-template-columns: 1fr; }
 }
 
