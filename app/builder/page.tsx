@@ -783,7 +783,13 @@ export default function BuilderPage() {
                   <p className="muted p-3" style={{ gridColumn: '1 / -1' }}>No races match your filters</p>
                 ) : (
                   <>
-                    {filteredRaces.map((r) => (
+                    {/* Races section - collapsible accordion */}
+                    <details className="accordion-section" open>
+                      <summary className="accordion-summary">
+                        <span>Races</span>
+                        <span className="accordion-arrow">▼</span>
+                      </summary>
+                      {filteredRaces.map((r) => (
                       <button
                         key={r.key}
                         type="button"
@@ -809,6 +815,7 @@ export default function BuilderPage() {
                         )}
                       </button>
                     ))}
+                    </details>
                     {/* Subrace - always show the section */}
                     <details className="accordion-section" open={!!selectedRace}>
                       <summary className="accordion-summary">
@@ -978,7 +985,13 @@ export default function BuilderPage() {
                   <p className="muted p-3" style={{ gridColumn: '1 / -1' }}>No classes match your filters</p>
                 ) : (
                   <>
-                    {filteredClasses.map((c) => (
+                    {/* Classes section - collapsible accordion */}
+                    <details className="accordion-section" open>
+                      <summary className="accordion-summary">
+                        <span>Classes</span>
+                        <span className="accordion-arrow">▼</span>
+                      </summary>
+                      {filteredClasses.map((c) => (
                       <button
                         key={c.key}
                         type="button"
@@ -992,6 +1005,7 @@ export default function BuilderPage() {
                         <span className="label-meta">d{c.hitDie} · {c.spell || 'martial'}</span>
                       </button>
                     ))}
+                    </details>
                     {/* Subclass - always show the section */}
                     <details className="accordion-section" open={!!selectedClass}>
                       <summary className="accordion-summary">
