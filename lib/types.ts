@@ -21,7 +21,7 @@ export interface Race {
   source: string;
   size: string;
   speed: number;
-  ability: AbilityScore;
+  ability: (AbilityScore & { choose?: { from?: string[] } })[];
   feats: { name: string; text: string }[];
   subraces: Subrace[];
 }

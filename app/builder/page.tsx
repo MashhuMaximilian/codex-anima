@@ -792,9 +792,15 @@ export default function BuilderPage() {
                         }}
                       >
                         <strong>{r.name}</strong>
-                        {r.ability && Object.keys(r.ability).length > 0 ? (
+                        {r.ability && r.ability.length > 0 ? (
                           <span className="label-meta">
-                            {Object.entries(r.ability).map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ')}
+                            {(() => {
+                              const ab = r.ability[0];
+                              if (!ab) return null;
+                              const fixed = Object.entries(ab).filter(([k]) => k !== 'choose').map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ');
+                              const chooses = (ab.choose?.from?.length ?? 0) > 0 ? `+1 Choose` : '';
+                              return fixed || chooses ? `${fixed} ${chooses}`.trim() : SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source;
+                            })()}
                           </span>
                         ) : (
                           <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
