@@ -466,8 +466,6 @@ export default function BuilderPage() {
   }, [races]);
 
   const setSources = (next: string[]) => {
-    // Block clearing to zero — keep at least one source enabled.
-    if (next.length === 0) return;
     setEnabledSources(next);
   };
   const toggleSource = (value: string) => {
@@ -804,8 +802,11 @@ export default function BuilderPage() {
                       </button>
                     ))}
                     {/* Subrace - always show the section */}
-                    <div className="split-pane__sublist">
-                      <p className="split-pane__sublist-label">Subrace</p>
+                    <details className="accordion-section" open={!!selectedRace}>
+                      <summary className="accordion-summary">
+                        <span>Subrace</span>
+                        <span className="accordion-arrow">{selectedRace ? '▼' : '▶'}</span>
+                      </summary>
                       {selectedRace && selectedRace.subraces.length > 0 ? (
                         selectedRace.subraces.map((sr) => (
                           <button
@@ -828,7 +829,7 @@ export default function BuilderPage() {
                       ) : (
                         <p className="muted text-sm p-2">Select a race to see subraces</p>
                       )}
-                    </div>
+                    </details>
                   </>
                 )}
               </div>
@@ -984,8 +985,11 @@ export default function BuilderPage() {
                       </button>
                     ))}
                     {/* Subclass - always show the section */}
-                    <div className="split-pane__sublist">
-                      <p className="split-pane__sublist-label">Subclass</p>
+                    <details className="accordion-section" open={!!selectedClass}>
+                      <summary className="accordion-summary">
+                        <span>Subclass</span>
+                        <span className="accordion-arrow">{selectedClass ? '▼' : '▶'}</span>
+                      </summary>
                       {selectedClass && selectedClass.subs.length > 0 ? (
                         selectedClass.subs.map((s) => (
                           <button
@@ -1004,7 +1008,7 @@ export default function BuilderPage() {
                       ) : (
                         <p className="muted text-sm p-2">Select a class to see subclasses</p>
                       )}
-                    </div>
+                    </details>
                   </>
                 )}
               </div>

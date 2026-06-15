@@ -1787,6 +1787,36 @@ body.modal-open {
   padding: 5px 8px;
 }
 
+/* Accordion sections for race/class lists */
+.accordion-section {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.accordion-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-soft);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+.accordion-summary:hover {
+  background: var(--bg-hover);
+}
+.accordion-arrow {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.accordion-section[open] .accordion-summary {
+  border-bottom: 1px solid var(--line-soft);
+}
+
 /* ============================================
    MOBILE RESPONSIVE — phone-first compact
    ============================================ */
