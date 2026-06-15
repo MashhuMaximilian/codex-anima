@@ -1503,6 +1503,13 @@ body.modal-open {
 }
 .source-chip--toggle:disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* Selected source chip (not the "All" toggle) */
+.source-chip--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 /* ============================================
    CHECKBOX + OPTIONAL RULES WRAPPER
    (gap between the two .checkbox-row cards)
