@@ -212,7 +212,7 @@ function ResizableSplitPane({
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
   };
-  const onDoubleClick = () => onLeftPxChange(360);
+  const onDoubleClick = () => onLeftPxChange(420);
 
   return (
     <div
@@ -404,14 +404,14 @@ export default function BuilderPage() {
 
   // Resizable split-pane widths (px) for Heritage/Calling on desktop.
   // Persisted to localStorage so the user's preferred split sticks.
-  const [heritageSplitPx, setHeritageSplitPx] = useState<number>(360);
-  const [callingSplitPx, setCallingSplitPx] = useState<number>(360);
+  const [heritageSplitPx, setHeritageSplitPx] = useState<number>(420);
+  const [callingSplitPx, setCallingSplitPx] = useState<number>(420);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const h = localStorage.getItem('codex.heritageSplitPx');
     const c = localStorage.getItem('codex.callingSplitPx');
-    if (h) setHeritageSplitPx(parseInt(h, 10) || 360);
-    if (c) setCallingSplitPx(parseInt(c, 10) || 360);
+    if (h) setHeritageSplitPx(parseInt(h, 10) || 420);
+    if (c) setCallingSplitPx(parseInt(c, 10) || 420);
   }, []);
   useEffect(() => { try { localStorage.setItem('codex.heritageSplitPx', String(heritageSplitPx)); } catch {} }, [heritageSplitPx]);
   useEffect(() => { try { localStorage.setItem('codex.callingSplitPx', String(callingSplitPx)); } catch {} }, [callingSplitPx]);
@@ -775,8 +775,8 @@ export default function BuilderPage() {
             <ResizableSplitPane
               leftPx={heritageSplitPx}
               onLeftPxChange={setHeritageSplitPx}
-              minLeft={240}
-              maxLeft={640}
+              minLeft={320}
+              maxLeft={800}
             >
               <div className="split-pane__list-inner">
                 {filteredRaces.length === 0 ? (
@@ -952,8 +952,8 @@ export default function BuilderPage() {
             <ResizableSplitPane
               leftPx={callingSplitPx}
               onLeftPxChange={setCallingSplitPx}
-              minLeft={240}
-              maxLeft={640}
+              minLeft={320}
+              maxLeft={800}
             >
               <div className="split-pane__list-inner">
                 {filteredClasses.length === 0 ? (
