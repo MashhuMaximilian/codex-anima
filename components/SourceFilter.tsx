@@ -42,17 +42,24 @@ export default function SourceFilter({
     : sources;
 
   const handleToggle = (code: string) => {
+    // If nothing selected, just add this one
+    if (selected.length === 0) {
+      onChange([code]);
+      return;
+    }
+    // If clicking a source that's already selected, deselect it
     if (selected.includes(code)) {
       if (requireAtLeastOne && selected.length === 1) return; // can't clear the last one
       onChange(selected.filter((c) => c !== code));
     } else {
+      // Add this source to selection
       onChange([...selected, code]);
     }
   };
 
   const handleAll = () => {
     if (allSelected) {
-      if (requireAtLeastOne) return; // can't clear all
+      // Allow deselecting all even with requireAtLeastOne - user explicitly clicked "All"
       onChange([]);
     } else {
       onChange(sources.map((s) => s.code));
@@ -68,7 +75,6 @@ export default function SourceFilter({
             type="button"
             className={`source-chip source-chip--toggle ${allSelected ? "source-chip--toggle-on" : ""}`}
             onClick={handleAll}
-            disabled={requireAtLeastOne && allSelected}
             title={allSelected ? "Deselect all sources" : "Select all sources"}
             aria-pressed={allSelected}
           >

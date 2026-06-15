@@ -212,7 +212,7 @@ function ResizableSplitPane({
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
   };
-  const onDoubleClick = () => onLeftPxChange(420);
+  const onDoubleClick = () => onLeftPxChange(480);
 
   return (
     <div
@@ -404,14 +404,14 @@ export default function BuilderPage() {
 
   // Resizable split-pane widths (px) for Heritage/Calling on desktop.
   // Persisted to localStorage so the user's preferred split sticks.
-  const [heritageSplitPx, setHeritageSplitPx] = useState<number>(420);
-  const [callingSplitPx, setCallingSplitPx] = useState<number>(420);
+  const [heritageSplitPx, setHeritageSplitPx] = useState<number>(480);
+  const [callingSplitPx, setCallingSplitPx] = useState<number>(480);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const h = localStorage.getItem('codex.heritageSplitPx');
     const c = localStorage.getItem('codex.callingSplitPx');
-    if (h) setHeritageSplitPx(parseInt(h, 10) || 420);
-    if (c) setCallingSplitPx(parseInt(c, 10) || 420);
+    if (h) setHeritageSplitPx(parseInt(h, 10) || 480);
+    if (c) setCallingSplitPx(parseInt(c, 10) || 480);
   }, []);
   useEffect(() => { try { localStorage.setItem('codex.heritageSplitPx', String(heritageSplitPx)); } catch {} }, [heritageSplitPx]);
   useEffect(() => { try { localStorage.setItem('codex.callingSplitPx', String(callingSplitPx)); } catch {} }, [callingSplitPx]);
@@ -775,8 +775,8 @@ export default function BuilderPage() {
             <ResizableSplitPane
               leftPx={heritageSplitPx}
               onLeftPxChange={setHeritageSplitPx}
-              minLeft={320}
-              maxLeft={800}
+              minLeft={360}
+              maxLeft={1100}
             >
               <div className="split-pane__list-inner">
                 {filteredRaces.length === 0 ? (
@@ -794,7 +794,13 @@ export default function BuilderPage() {
                         }}
                       >
                         <strong>{r.name}</strong>
-                        <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
+                        {r.ability && Object.keys(r.ability).length > 0 ? (
+                          <span className="label-meta">
+                            {Object.entries(r.ability).map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ')}
+                          </span>
+                        ) : (
+                          <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
+                        )}
                       </button>
                     ))}
                     {/* Subrace - always show the section */}
@@ -955,8 +961,8 @@ export default function BuilderPage() {
             <ResizableSplitPane
               leftPx={callingSplitPx}
               onLeftPxChange={setCallingSplitPx}
-              minLeft={320}
-              maxLeft={800}
+              minLeft={360}
+              maxLeft={1100}
             >
               <div className="split-pane__list-inner">
                 {filteredClasses.length === 0 ? (
