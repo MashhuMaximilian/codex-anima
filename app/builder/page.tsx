@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Accordion } from '@/components/Accordion';
 import { FilterBar } from '@/components/FilterBar';
@@ -369,7 +369,19 @@ async function loadAllClasses(): Promise<DndClass[]> {
 
 export default function BuilderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
+  
+  // Read step from URL on mount
+  useEffect(() => {
+    const stepParam = searchParams.get('step');
+    if (stepParam) {
+      const parsed = parseInt(stepParam, 10);
+      if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
+        setStep(parsed);
+      }
+    }
+  }, [searchParams]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<DndClass[]>([]);
   const [loading, setLoading] = useState(true);
@@ -564,9 +576,15 @@ export default function BuilderPage() {
     } else if (step === 5) {
       if (ptUsed > 27) return alert(`Over budget by ${ptUsed - 27} points — reduce a stat`);
     }
-    setStep((s) => Math.min(STEP_LABELS.length, s + 1));
+    const newStep = Math.min(STEP_LABELS.length, step + 1);
+    setStep(newStep);
+    router.replace(`/builder?step=${newStep}`);
   };
-  const prevStep = () => setStep((s) => Math.max(1, s - 1));
+  const prevStep = () => {
+    const newStep = Math.max(1, step - 1);
+    setStep(newStep);
+    router.replace(`/builder?step=${newStep}`);
+  };
 
   const handleExport = () => {
     const data = JSON.stringify(char, null, 2);
