@@ -369,19 +369,19 @@ async function loadAllClasses(): Promise<DndClass[]> {
 
 export default function BuilderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   
   // Read step from URL on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const stepParam = params.get('step');
+    const stepParam = searchParams?.get('step');
     if (stepParam) {
       const parsed = parseInt(stepParam, 10);
       if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
         setStep(parsed);
       }
     }
-  }, []);
+  }, [searchParams]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<DndClass[]>([]);
   const [loading, setLoading] = useState(true);
