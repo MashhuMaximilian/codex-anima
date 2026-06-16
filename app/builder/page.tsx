@@ -437,6 +437,10 @@ function BuilderContent() {
   const [modalSubrace, setModalSubrace] = useState<Subrace | null>(null);
   const [modalSubclass, setModalSubclass] = useState<Subclass | null>(null);
 
+  // Feature expansion state
+  const [expandedRaceFeatures, setExpandedRaceFeatures] = useState(false);
+  const [expandedClassFeatures, setExpandedClassFeatures] = useState(false);
+
   // Preview state — the item currently shown in the right-hand pane
   // (desktop split-pane). Independent of the selected one.
   const [previewRaceKey, setPreviewRaceKey] = useState<string | null>(null);
@@ -951,14 +955,21 @@ function BuilderContent() {
                     {previewRace.feats.length > 0 && (
                       <div style={{ marginBottom: 8 }}>
                         <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>Features</h3>
-                        {previewRace.feats.slice(0, 6).map((f, i) => (
+                        {(expandedRaceFeatures ? previewRace.feats : previewRace.feats.slice(0, 6)).map((f, i) => (
                           <div key={i} className="feature-block">
                             {f.name && <strong>{f.name}</strong>}
                             <p>{f.text}</p>
                           </div>
                         ))}
                         {previewRace.feats.length > 6 && (
-                          <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewRace.feats.length - 6} more features</p>
+                          <button
+                            type="button"
+                            className="source-chip"
+                            onClick={() => setExpandedRaceFeatures(!expandedRaceFeatures)}
+                            style={{ marginTop: 6 }}
+                          >
+                            {expandedRaceFeatures ? 'Show less' : `+ ${previewRace.feats.length - 6} more features`}
+                          </button>
                         )}
                       </div>
                     )}
@@ -1175,14 +1186,21 @@ function BuilderContent() {
                         <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>
                           Class Features ({previewClass.feats.length})
                         </h3>
-                        {previewClass.feats.slice(0, 8).map((f, i) => (
+                        {(expandedClassFeatures ? previewClass.feats : previewClass.feats.slice(0, 8)).map((f, i) => (
                           <div key={i} className="feature-block">
                             <strong>{f.name}</strong>
                             <p>{f.text}</p>
                           </div>
                         ))}
                         {previewClass.feats.length > 8 && (
-                          <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewClass.feats.length - 8} more features</p>
+                          <button
+                            type="button"
+                            className="source-chip"
+                            onClick={() => setExpandedClassFeatures(!expandedClassFeatures)}
+                            style={{ marginTop: 6 }}
+                          >
+                            {expandedClassFeatures ? 'Show less' : `+ ${previewClass.feats.length - 8} more features`}
+                          </button>
                         )}
                       </div>
                     )}
