@@ -437,7 +437,7 @@ function BuilderContent() {
   const [modalSubrace, setModalSubrace] = useState<Subrace | null>(null);
   const [modalSubclass, setModalSubclass] = useState<Subclass | null>(null);
 
-  // Feature expansion state
+// Feature expansion state - for showing all race/class features
   const [expandedRaceFeatures, setExpandedRaceFeatures] = useState(false);
   const [expandedClassFeatures, setExpandedClassFeatures] = useState(false);
 
