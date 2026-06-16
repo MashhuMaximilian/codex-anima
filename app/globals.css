@@ -1618,7 +1618,7 @@ body.modal-open {
   box-sizing: border-box;
 }
 
-/* Mobile accordion items - force 2 columns and spacing */
+/* Mobile accordion grid fix - 2 columns, no scroll lock */
 @media (max-width: 768px) {
   .split-pane__list-inner .list-item {
     width: calc(50% - 8px) !important;
