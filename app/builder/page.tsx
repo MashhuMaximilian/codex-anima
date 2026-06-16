@@ -351,10 +351,27 @@ async function loadAllClasses(): Promise<DndClass[]> {
       }));
 
       const subMap = new Map<string, Subclass>();
+      // Index subclass features by subclass name for quick lookup
+      const subclassFeatureMap = new Map<string, any[]>();
+      for (const sf of (d.subclassFeature || [])) {
+        const key = `${sf.subclassShortName || sf.name}`;
+        if (!subclassFeatureMap.has(key)) subclassFeatureMap.set(key, []);
+        subclassFeatureMap.get(key)!.push(sf);
+      }
+      
       for (const s of (d.subclass || [])) {
         if (subMap.has(s.name)) continue;
         const text = `[${s.source || s.classSource || ''}] ${s.className || ''} subclass`.trim();
-        subMap.set(s.name, { name: s.name, text, source: s.source });
+        
+        // Get features for this subclass
+        const key = s.shortName || s.name;
+        const feats = (subclassFeatureMap.get(key) || []).map((f: any) => ({
+          name: f.name,
+          text: extractText(f.entries || []).slice(0, 600),
+          level: f.level,
+        }));
+        
+        subMap.set(s.name, { name: s.name, text, source: s.source, feats });
       }
 
       cls.push({
@@ -1470,6 +1487,18 @@ function BuilderContent() {
             <div className="modal-body">
               {modalSubclass.text && (
                 <p style={{ color: 'var(--text)', lineHeight: 1.6 }}>{modalSubclass.text}</p>
+              )}
+              {modalSubclass.feats && modalSubclass.feats.length > 0 && (
+                <div className="modal-section">
+                  <h3>Features</h3>
+                  {modalSubclass.feats.map((f, i) => (
+                    <div key={i} className="feature-item">
+                      {f.level && <span className="source-tag" style={{ marginBottom: 4 }}>Level {f.level}</span>}
+                      {f.name && <strong>{f.name}</strong>}
+                      <p>{f.text}</p>
+                    </div>
+                  ))}
+                </div>
               )}
               <p className="muted mt-3 text-sm">You can pick your subclass at level 1 (2024 rules) or wait until level 3 (2014 rules) — either way, this choice is reversible until you save.</p>
             </div>

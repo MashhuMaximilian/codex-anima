@@ -1908,8 +1908,8 @@ body.modal-open {
   /* Buttons: tighter */
   .btn-row { gap: 6px; }
   .btn { padding: 8px 12px; font-size: 12px; }
-  /* Pick grid: 2 cols on phone */
-  .pick-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Pick grid: 2 cols on phone - force consistent */
+  .pick-grid { grid-template-columns: repeat(2, 1fr) !important; }
   /* Filter bar: wrap tighter */
   .filter-bar { gap: 6px; }
   .filter-bar__search { padding: 8px 10px; font-size: 13px; }

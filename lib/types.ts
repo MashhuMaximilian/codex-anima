@@ -30,6 +30,7 @@ export interface Subclass {
   name: string;
   text: string;
   source?: string;
+  feats?: { name: string; text: string; level?: number }[];
 }
 
 export interface ClassFeature {
