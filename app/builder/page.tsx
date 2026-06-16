@@ -829,14 +829,21 @@ export default function BuilderPage() {
                         }}
                       >
                         <strong>{r.name}</strong>
-                        {r.ability && r.ability.length > 0 ? (
+                        {r.ability ? (
                           <span className="label-meta">
                             {(() => {
-                              const ab = r.ability[0];
-                              if (!ab) return null;
-                              const fixed = Object.entries(ab).filter(([k]) => k !== 'choose').map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ');
-                              const chooses = (ab.choose?.from?.length ?? 0) > 0 ? `+1 Choose` : '';
-                              return fixed || chooses ? `${fixed} ${chooses}`.trim() : null;
+                              // r.ability can be array or object - handle both
+                              const abilityObj = Array.isArray(r.ability) 
+                                ? Object.assign({}, ...r.ability.filter((a: any) => typeof a === 'object' && !a.choose))
+                                : r.ability;
+                              if (!abilityObj || typeof abilityObj !== 'object') return '—';
+                              const entries = Object.entries(abilityObj).filter(([k]) => k !== 'choose');
+                              if (entries.length === 0) {
+                                // Check for choose in any array element
+                                const anyChoose = Array.isArray(r.ability) ? r.ability.some((a: any) => a?.choose) : false;
+                                return anyChoose ? '+1 Choose' : '—';
+                              }
+                              return entries.map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ');
                             })()}
                           </span>
                         ) : (
@@ -867,17 +874,16 @@ export default function BuilderPage() {
                               <span className="label-meta">
                                 {(() => {
                                   if (!sr.ability) return null;
-                                  // Handle array of ability objects (like races)
-                                  if (Array.isArray(sr.ability)) {
-                                    const ab = sr.ability[0];
-                                    if (!ab) return null;
-                                    const fixed = Object.entries(ab).filter(([k]) => k !== 'choose').map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ');
-                                    const chooses = (ab.choose?.from?.length ?? 0) > 0 ? `+1 Choose` : '';
-                                    return fixed || chooses ? `${fixed} ${chooses}`.trim() : null;
+                                  // sr.ability can be array or object - handle both
+                                  const abilityObj = Array.isArray(sr.ability)
+                                    ? Object.assign({}, ...sr.ability.filter((a: any) => typeof a === 'object' && !a.choose))
+                                    : sr.ability;
+                                  if (!abilityObj || typeof abilityObj !== 'object') return null;
+                                  const entries = Object.entries(abilityObj).filter(([k]) => k !== 'choose');
+                                  if (entries.length === 0) {
+                                    const anyChoose = Array.isArray(sr.ability) ? sr.ability.some((a: any) => a?.choose) : false;
+                                    return anyChoose ? '+1 Choose' : null;
                                   }
-                                  // Handle regular object
-                                  const entries = Object.entries(sr.ability).filter(([k]) => k !== 'choose');
-                                  if (entries.length === 0) return null;
                                   return entries.map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ');
                                 })()}
                               </span>
