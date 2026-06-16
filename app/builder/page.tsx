@@ -367,7 +367,7 @@ async function loadAllClasses(): Promise<DndClass[]> {
   return cls;
 }
 
-export default function BuilderPage() {
+function BuilderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
@@ -1483,5 +1483,15 @@ export default function BuilderPage() {
         </div>
       )}
     </div>
+  );
+}
+
+import { Suspense } from 'react';
+
+export default function BuilderPage() {
+  return (
+    <Suspense fallback={<div className="wrap"><p className="muted">Loading...</p></div>}>
+      <BuilderContent />
+    </Suspense>
   );
 }
