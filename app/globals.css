@@ -1556,9 +1556,9 @@ body.modal-open {
 
 /* 2-per-row grid on desktop, 3-col on large screens, single column on mobile. */
 .split-pane__list-inner {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 6px;
   background: var(--bg-soft);
   border: 1px solid var(--line);
@@ -1566,8 +1566,33 @@ body.modal-open {
   overflow-y: auto;
   min-height: 0;
   flex: 1;
-  align-content: start;
 }
+
+/* Accordion sections span full width */
+.split-pane__list-inner > .accordion-section {
+  width: 100%;
+}
+
+/* Grid for items inside accordions - 3 columns on desktop */
+.split-pane__list-inner > .accordion-section > :not(summary) {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding-top: 6px;
+}
+
+@media (max-width: 1024px) {
+  .split-pane__list-inner > .accordion-section > :not(summary) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .split-pane__list-inner > .accordion-section > :not(summary) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Race and class items should show source in a second line */
 .split-pane__list-inner .list-item {
   display: flex;

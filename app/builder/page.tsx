@@ -834,9 +834,23 @@ export default function BuilderPage() {
                             }}
                           >
                             <strong>{sr.name}</strong>
-                            {sr.ability && Object.keys(sr.ability).length > 0 && (
+                            {sr.ability && (
                               <span className="label-meta">
-                                {Object.entries(sr.ability).map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ')}
+                                {(() => {
+                                  if (!sr.ability) return null;
+                                  // Handle array of ability objects (like races)
+                                  if (Array.isArray(sr.ability)) {
+                                    const ab = sr.ability[0];
+                                    if (!ab) return null;
+                                    const fixed = Object.entries(ab).filter(([k]) => k !== 'choose').map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ');
+                                    const chooses = (ab.choose?.from?.length ?? 0) > 0 ? `+1 Choose` : '';
+                                    return fixed || chooses ? `${fixed} ${chooses}`.trim() : null;
+                                  }
+                                  // Handle regular object
+                                  const entries = Object.entries(sr.ability).filter(([k]) => k !== 'choose');
+                                  if (entries.length === 0) return null;
+                                  return entries.map(([k, v]) => `${k.toUpperCase()}+${v}`).join(' ');
+                                })()}
                               </span>
                             )}
                           </button>
