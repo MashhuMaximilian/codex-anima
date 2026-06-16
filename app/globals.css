@@ -1574,25 +1574,35 @@ body.modal-open {
 }
 
 /* Grid for items inside accordions - 3 columns on desktop */
-.split-pane__list-inner > .accordion-section > :not(summary) {
+.split-pane__list-inner > .accordion-section > .accordion-content {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 8px;
+  gap: 10px;
+  padding: 10px;
   max-height: 400px;
   overflow-y: auto;
 }
 
-@media (max-width: 1024px) {
-  .split-pane__list-inner > .accordion-section > :not(summary) {
-    grid-template-columns: repeat(2, 1fr);
+/* Mobile: 2 columns always */
+@media (max-width: 768px) {
+  .split-pane__list-inner > .accordion-section > .accordion-content {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+  
+  /* Make list items in accordions have proper spacing */
+  .split-pane__list-inner > .accordion-section .list-item {
+    margin-bottom: 6px !important;
   }
 }
 
 @media (max-width: 640px) {
-  .split-pane__list-inner > .accordion-section > :not(summary) {
+  .split-pane__list-inner > .accordion-section > .accordion-content {
     grid-template-columns: repeat(2, 1fr);
-    max-height: 300px;
+    max-height: none;
   }
 }
 
@@ -1604,6 +1614,19 @@ body.modal-open {
   gap: 3px;
   padding: 10px 12px;
   min-height: 56px;
+  margin: 4px;
+  box-sizing: border-box;
+}
+
+/* Mobile accordion items - force 2 columns and spacing */
+@media (max-width: 768px) {
+  .split-pane__list-inner .list-item {
+    width: calc(50% - 8px) !important;
+    margin: 4px !important;
+    padding: 8px 10px !important;
+    min-height: 52px !important;
+    flex: none !important;
+  }
 }
 .split-pane__list-inner .list-item strong {
   font-size: 15px;

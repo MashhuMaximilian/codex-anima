@@ -818,6 +818,7 @@ export default function BuilderPage() {
                         <span>Races</span>
                         <span className="accordion-arrow">▼</span>
                       </summary>
+                      <div className="accordion-content">
                       {filteredRaces.map((r) => (
                       <button
                         key={r.key}
@@ -851,6 +852,7 @@ export default function BuilderPage() {
                         )}
                       </button>
                     ))}
+                      </div>
                     </details>
                     {/* Subrace - always show the section */}
                     <details className="accordion-section" open={!!selectedRace}>
@@ -1060,6 +1062,7 @@ export default function BuilderPage() {
                         <span>Classes</span>
                         <span className="accordion-arrow">▼</span>
                       </summary>
+                      <div className="accordion-content">
                       {filteredClasses.map((c) => (
                       <button
                         key={c.key}
@@ -1074,6 +1077,7 @@ export default function BuilderPage() {
                         <span className="label-meta">d{c.hitDie} · {c.spell || 'martial'}</span>
                       </button>
                     ))}
+                      </div>
                     </details>
                     {/* Subclass - always show the section */}
                     <details className="accordion-section" open={!!selectedClass}>
