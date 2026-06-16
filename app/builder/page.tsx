@@ -1348,12 +1348,23 @@ export default function BuilderPage() {
                 <div className="modal-section">
                   <h3>Ability Modifiers</h3>
                   <div className="section-stats">
-                    {Object.entries(modalSubrace.ability).map(([k, v]) => (
-                      <div key={k} className="stat-item">
-                        <span>{k.toUpperCase()}</span>
-                        <strong>+{String(v)}</strong>
-                      </div>
-                    ))}
+                    {Array.isArray(modalSubrace.ability) ? (
+                      modalSubrace.ability.map((abil, idx) => (
+                        Object.entries(abil).filter(([k]) => k !== 'choose').map(([k, v]) => (
+                          <div key={`${k}-${idx}`} className="stat-item">
+                            <span>{k.toUpperCase()}</span>
+                            <strong>+{String(v)}</strong>
+                          </div>
+                        ))
+                      ))
+                    ) : (
+                      Object.entries(modalSubrace.ability).filter(([k]) => k !== 'choose').map(([k, v]) => (
+                        <div key={k} className="stat-item">
+                          <span>{k.toUpperCase()}</span>
+                          <strong>+{String(v)}</strong>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
