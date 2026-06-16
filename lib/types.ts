@@ -36,6 +36,7 @@ export interface ClassFeature {
   name: string;
   text: string;
   level?: number;
+  source?: string;
 }
 
 export interface DndClass {
@@ -44,6 +45,7 @@ export interface DndClass {
   hitDie: number;
   saves: string[];
   spell: string | null;
+  source?: string;
   feats: ClassFeature[];
   subs: Subclass[];
 }

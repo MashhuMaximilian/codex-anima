@@ -1577,8 +1577,10 @@ body.modal-open {
 .split-pane__list-inner > .accordion-section > :not(summary) {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  padding-top: 6px;
+  gap: 8px;
+  padding: 8px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 @media (max-width: 1024px) {
@@ -1590,6 +1592,7 @@ body.modal-open {
 @media (max-width: 640px) {
   .split-pane__list-inner > .accordion-section > :not(summary) {
     grid-template-columns: repeat(2, 1fr);
+    max-height: 300px;
   }
 }
 

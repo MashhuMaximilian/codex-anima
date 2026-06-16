@@ -343,9 +343,11 @@ async function loadAllClasses(): Promise<DndClass[]> {
       const c = d.class?.[0];
       if (!c) continue;
 
+      const classSource = c.source || 'PHB';
       const feats = (d.classFeature || []).map((f: any) => ({
         name: f.name,
         text: extractText(f.entries).slice(0, 600),
+        source: f.source || classSource,
       }));
 
       const subMap = new Map<string, Subclass>();
@@ -358,7 +360,7 @@ async function loadAllClasses(): Promise<DndClass[]> {
       cls.push({
         key, name: c.name, hitDie: c.hd.faces,
         saves: c.proficiency, spell: c.spellcastingAbility || null,
-        feats, subs: Array.from(subMap.values()),
+        source: classSource, feats, subs: Array.from(subMap.values()),
       });
     } catch (e) { console.warn(key, e); }
   }
@@ -495,15 +497,24 @@ export default function BuilderPage() {
 
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
+      if (!effectiveHeritageSources.includes(c.source || 'PHB')) return false;
       if (classSearch && !c.name.toLowerCase().includes(classSearch.toLowerCase())) return false;
       if (classSpell === 'yes' && !c.spell) return false;
       if (classSpell === 'no' && c.spell) return false;
       return true;
     });
-  }, [classes, classSearch, classSpell]);
+  }, [classes, classSearch, classSpell, effectiveHeritageSources]);
 
   const selectedRace = races.find((r) => r.name === char.race);
   const selectedClass = classes.find((c) => c.key === char.klass);
+  
+  // Filter class features by enabled sources for Step 5 display
+  const filteredClassFeatures = useMemo(() => {
+    if (!selectedClass) return [];
+    return selectedClass.feats.filter((f) => 
+      effectiveHeritageSources.includes(f.source || selectedClass.source || 'PHB')
+    );
+  }, [selectedClass, effectiveHeritageSources]);
 
   // Derive the items currently shown in the right-hand preview pane.
   // Priority: user-clicked preview > currently selected item > null.
@@ -807,11 +818,11 @@ export default function BuilderPage() {
                               if (!ab) return null;
                               const fixed = Object.entries(ab).filter(([k]) => k !== 'choose').map(([k, v]) => `+${v} ${k.toUpperCase()}`).join(' ');
                               const chooses = (ab.choose?.from?.length ?? 0) > 0 ? `+1 Choose` : '';
-                              return fixed || chooses ? `${fixed} ${chooses}`.trim() : SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source;
+                              return fixed || chooses ? `${fixed} ${chooses}`.trim() : null;
                             })()}
                           </span>
                         ) : (
-                          <span className="label-meta">{SOURCE_NAMES[r.source]?.replace(/'/g, '').slice(0, 12) || r.source}</span>
+                          <span className="label-meta">—</span>
                         )}
                       </button>
                     ))}
@@ -1200,20 +1211,20 @@ export default function BuilderPage() {
               Points used: <strong>{ptUsed}</strong> / 27
             </p>
 
-            {selectedClass && selectedClass.feats.length > 0 && (
+            {selectedClass && filteredClassFeatures.length > 0 && (
               <details className="disclosure">
                 <summary>
-                  <span>Class features preview ({selectedClass.feats.length})</span>
+                  <span>Class features preview ({filteredClassFeatures.length})</span>
                 </summary>
                 <div className="mt-2">
-                  {selectedClass.feats.slice(0, 5).map((f, i) => (
+                  {filteredClassFeatures.slice(0, 5).map((f, i) => (
                     <div key={i} className="feature-item">
                       <strong>{f.name}</strong>
                       <p>{f.text}</p>
                     </div>
                   ))}
-                  {selectedClass.feats.length > 5 && (
-                    <p className="muted text-center mt-2">+ {selectedClass.feats.length - 5} more features</p>
+                  {filteredClassFeatures.length > 5 && (
+                    <p className="muted text-center mt-2">+ {filteredClassFeatures.length - 5} more features</p>
                   )}
                 </div>
               </details>
