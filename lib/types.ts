@@ -13,6 +13,7 @@ export interface Subrace {
   name: string;
   text: string;
   ability?: any;
+  feats?: { name: string; text: string }[];
 }
 
 export interface Race {

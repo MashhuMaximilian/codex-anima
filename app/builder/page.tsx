@@ -285,8 +285,17 @@ async function loadAllRaces(): Promise<Race[]> {
   for (const sr of (d.subrace || []) as RawSubrace[]) {
     if (!sr.raceName || !sr.name) continue;
     const text = extractText(sr.entries).slice(0, 500);
+    // Extract feats from entries - look for named feature objects
+    const feats: { name: string; text: string }[] = [];
+    if (sr.entries && Array.isArray(sr.entries)) {
+      for (const e of sr.entries) {
+        if (typeof e === 'object' && e && e.name && e.entries) {
+          feats.push({ name: e.name, text: extractText(e.entries).slice(0, 500) });
+        }
+      }
+    }
     if (!subraceMap.has(sr.raceName)) subraceMap.set(sr.raceName, []);
-    subraceMap.get(sr.raceName)!.push({ name: sr.name, text, ability: sr.ability });
+    subraceMap.get(sr.raceName)!.push({ name: sr.name, text, ability: sr.ability, feats: feats.length > 0 ? feats : undefined });
   }
 
   for (const [rn, arr] of subraceMap) {
@@ -877,6 +886,7 @@ function BuilderContent() {
                         <span>Subrace</span>
                         <span className="accordion-arrow">{selectedRace ? '▼' : '▶'}</span>
                       </summary>
+                      <div className="accordion-content">
                       {selectedRace && selectedRace.subraces.length > 0 ? (
                         selectedRace.subraces.map((sr) => (
                           <button
@@ -912,6 +922,7 @@ function BuilderContent() {
                       ) : (
                         <p className="muted text-sm p-2">Select a race to see subraces</p>
                       )}
+                      </div>
                     </details>
                   </>
                 )}
@@ -988,6 +999,20 @@ function BuilderContent() {
                         )}
                         {previewSubrace.text && (
                           <p style={{ color: 'var(--text-dim)', fontSize: 12, lineHeight: 1.5 }}>{previewSubrace.text}</p>
+                        )}
+                        {previewSubrace.feats && previewSubrace.feats.length > 0 && (
+                          <div style={{ marginTop: 8 }}>
+                            <h3 style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: 6 }}>Subrace Features</h3>
+                            {previewSubrace.feats.slice(0, 4).map((f, i) => (
+                              <div key={i} className="feature-block">
+                                {f.name && <strong>{f.name}</strong>}
+                                <p>{f.text}</p>
+                              </div>
+                            ))}
+                            {previewSubrace.feats.length > 4 && (
+                              <p className="muted text-sm" style={{ marginTop: 4 }}>+ {previewSubrace.feats.length - 4} more</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -1102,6 +1127,7 @@ function BuilderContent() {
                         <span>Subclass</span>
                         <span className="accordion-arrow">{selectedClass ? '▼' : '▶'}</span>
                       </summary>
+                      <div className="accordion-content">
                       {selectedClass && selectedClass.subs.length > 0 ? (
                         selectedClass.subs.map((s) => (
                           <button
@@ -1120,6 +1146,7 @@ function BuilderContent() {
                       ) : (
                         <p className="muted text-sm p-2">Select a class to see subclasses</p>
                       )}
+                      </div>
                     </details>
                   </>
                 )}
@@ -1411,6 +1438,17 @@ function BuilderContent() {
                       ))
                     )}
                   </div>
+                </div>
+              )}
+              {modalSubrace.feats && modalSubrace.feats.length > 0 && (
+                <div className="modal-section">
+                  <h3>Features</h3>
+                  {modalSubrace.feats.map((f, i) => (
+                    <div key={i} className="feature-item">
+                      {f.name && <strong>{f.name}</strong>}
+                      <p>{f.text}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
