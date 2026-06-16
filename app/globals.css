@@ -1586,26 +1586,21 @@ body.modal-open {
 /* Mobile: 2 columns always, compact grid */
 @media (max-width: 768px) {
   .split-pane__list-inner > .accordion-section > .accordion-content {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 6px !important;
-    padding: 6px !important;
-    max-height: none !important;
-    overflow-y: visible !important;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
+    max-height: 55vh;
+    overflow-y: auto;
   }
   
-  /* Make list items in accordions compact */
+  /* Make list items fill their grid cells */
   .split-pane__list-inner > .accordion-section .list-item {
-    margin: 2px !important;
-    padding: 8px !important;
-  }
-  
-  /* Reduce card gap for more ergonomic spacing */
-  .split-pane__list-inner .list-item {
-    width: calc(50% - 4px) !important;
-    margin: 2px !important;
-    padding: 6px 8px !important;
-    min-height: 44px !important;
-    flex: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 8px !important;
+    min-height: 48px !important;
+    box-sizing: border-box;
   }
   
   .split-pane__list-inner .list-item strong {
