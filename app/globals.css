@@ -560,9 +560,17 @@ input, button, select, textarea, .ui {
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  z-index: 10;
+  position: relative;
   transition: all 0.15s;
 }
-.source-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.source-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .source-chip.active {
   background: var(--accent);
   color: #fdf6e7;

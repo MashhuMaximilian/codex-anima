@@ -964,8 +964,8 @@ function BuilderContent() {
                         {previewRace.feats.length > 6 && (
                           <button
                             type="button"
-                            className="source-chip"
-                            onClick={() => setExpandedRaceFeatures(!expandedRaceFeatures)}
+                            className="source-chip expand-features-btn"
+                            onClick={() => { console.log('Toggle race features:', !expandedRaceFeatures); setExpandedRaceFeatures(!expandedRaceFeatures); }}
                             style={{ marginTop: 6 }}
                           >
                             {expandedRaceFeatures ? 'Show less' : `+ ${previewRace.feats.length - 6} more features`}
@@ -1195,8 +1195,8 @@ function BuilderContent() {
                         {previewClass.feats.length > 8 && (
                           <button
                             type="button"
-                            className="source-chip"
-                            onClick={() => setExpandedClassFeatures(!expandedClassFeatures)}
+                            className="source-chip expand-features-btn"
+                            onClick={() => { console.log('Toggle class features:', !expandedClassFeatures); setExpandedClassFeatures(!expandedClassFeatures); }}
                             style={{ marginTop: 6 }}
                           >
                             {expandedClassFeatures ? 'Show less' : `+ ${previewClass.feats.length - 8} more features`}
